@@ -64,6 +64,46 @@ client against a server built by `app.Build`, so they exercise what ships.
 After touching the safety layer, run `just test-safety`. Before pushing, run
 `just ci`.
 
+Fuzz targets cover the two parsers that handle input an attacker influences:
+the untrusted-content sanitiser and registry parameter validation. Run
+`just fuzz` after changing either. A crash found there is a real finding; the
+failing input is written to `testdata/fuzz/` and should be committed as a
+regression seed.
+
+Coverage floors are enforced: 65% overall, 80% for `internal/policy`,
+`internal/confirm`, `internal/redact`, `internal/shape`, `internal/untrusted`
+and `internal/whmcs`.
+
+## Commits and releases
+
+[Conventional Commits](https://www.conventionalcommits.org/), enforced by a
+commit-msg hook. release-please derives the version bump and `CHANGELOG.md`
+from them, so the commit message is the release note and a wrong type ships a
+wrong release note.
+
+Pick the type by what an operator sees, not by which files moved. A change to
+the safety classification, a capability profile, or the confirmation protocol is
+a behaviour change: `feat:` or `fix:` with a scope, or `feat!:` when something
+previously permitted becomes forbidden. Never `chore:` or `refactor:` for those.
+`sec:` is available for a security fix that is not otherwise a feature or a bug
+fix.
+
+Never tag a release by hand. Merging to `main` updates a release PR; merging
+that PR cuts the release.
+
+## Supply chain
+
+Every GitHub Action is pinned to a commit SHA. `just pin-check` fails the build
+on a tag reference, so do not add one, and do not "fix" a pin by replacing it
+with a tag. Resolve a new pin with:
+
+```sh
+gh api repos/OWNER/REPO/git/ref/tags/TAG --jq .object.sha
+```
+
+Workflows default to `permissions: read-all`; grant a job only what it needs.
+The container base image is pinned by digest for the same reason.
+
 ## Conventions
 
 - No AI-sounding boilerplate in commits, PRs, or docs. No em dashes in

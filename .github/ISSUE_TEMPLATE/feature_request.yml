@@ -1,0 +1,54 @@
+name: Feature request
+description: Propose new behaviour
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Behaviour changes are specified before they are built. A good request
+        here becomes a requirement in `openspec/specs/`.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What operational problem does this solve
+      description: What is someone doing by hand today, or what can they not do at all?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behaviour
+    validations:
+      required: true
+
+  - type: dropdown
+    id: shape
+    attributes:
+      label: Shape
+      description: The tool surface is capped at 30. A new curated tool needs an argument that the flow is common enough to spend a slot and a slice of every agent's context on.
+      options:
+        - A new curated tool
+        - A change to an existing tool
+        - Reachable through whmcs_call_action already, but awkward
+        - Not a tool change
+    validations:
+      required: true
+
+  - type: dropdown
+    id: risk
+    attributes:
+      label: Does this let an agent change anything
+      options:
+        - "No: read only"
+        - "Yes: a reversible write"
+        - "Yes: something irreversible, moves money, changes provisioning, or emails a customer"
+    validations:
+      required: true
+
+  - type: textarea
+    id: profiles
+    attributes:
+      label: Which profiles should permit it
+      description: readonly, support, billing, admin. Say why, given that support cannot touch billing and billing cannot touch provisioning.

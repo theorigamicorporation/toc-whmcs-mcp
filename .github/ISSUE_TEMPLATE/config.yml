@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/theorigamicorporation/toc-whmcs-mcp/security/advisories/new
+    about: Report security issues privately. Never in a public issue.
+  - name: Operational incident on a live WHMCS instance
+    url: https://github.com/theorigamicorporation/toc-whmcs-mcp/blob/main/SECURITY.md
+    about: Revoke the API credential first, then follow SECURITY.md.

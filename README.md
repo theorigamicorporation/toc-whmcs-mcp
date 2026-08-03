@@ -1,5 +1,11 @@
 # toc-whmcs-mcp
 
+[![CI](https://github.com/theorigamicorporation/toc-whmcs-mcp/actions/workflows/ci.yaml/badge.svg)](https://github.com/theorigamicorporation/toc-whmcs-mcp/actions/workflows/ci.yaml)
+[![CodeQL](https://github.com/theorigamicorporation/toc-whmcs-mcp/actions/workflows/codeql.yaml/badge.svg)](https://github.com/theorigamicorporation/toc-whmcs-mcp/actions/workflows/codeql.yaml)
+[![Release](https://github.com/theorigamicorporation/toc-whmcs-mcp/actions/workflows/release-please.yaml/badge.svg)](https://github.com/theorigamicorporation/toc-whmcs-mcp/actions/workflows/release-please.yaml)
+[![Registry drift](https://github.com/theorigamicorporation/toc-whmcs-mcp/actions/workflows/registry-drift.yaml/badge.svg)](https://github.com/theorigamicorporation/toc-whmcs-mcp/actions/workflows/registry-drift.yaml)
+[![License: Proprietary](https://img.shields.io/badge/License-Proprietary-red.svg)](LICENSE)
+
 An MCP server that exposes the WHMCS Admin API to LLM agents, for support
 triage, billing lookups and provisioning work.
 
@@ -265,15 +271,52 @@ A scheduled workflow re-runs the check weekly and opens an issue on drift.
 
 ```bash
 just              # grouped recipe list
-just ci           # everything CI runs: format check, vet, race tests
+just ci           # everything CI runs, in one command
 just test-safety  # policy, confirmation, redaction, injection tests only
+just fuzz         # fuzz the parsers that handle attacker-influenced input
 just coverage     # HTML coverage report
-just lint         # golangci-lint (needs `just setup-tools`)
+just lint         # golangci-lint
+just sast         # gosec
+just audit        # govulncheck
+just pin-check    # every GitHub Action must be pinned to a commit SHA
 ```
 
 Tests run offline against an in-process fake WHMCS
 (`internal/whmcs/whmcstest`). No test requires credentials or network access,
 and none prints real customer data.
+
+Coverage floors are enforced in CI: 65% overall, and 80% for `internal/policy`,
+`internal/confirm`, `internal/redact`, `internal/shape`, `internal/untrusted`
+and `internal/whmcs`. The safety packages are held higher on purpose.
+
+Commits follow [Conventional Commits](https://www.conventionalcommits.org/),
+enforced by a commit-msg hook (`just setup-hooks`). The version and
+`CHANGELOG.md` are generated from them by release-please, so the commit message
+is the release note. See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+### Supply chain
+
+The pipeline is part of the attack surface: this binary holds a credential to a
+billing system.
+
+- Every GitHub Action is pinned to a commit SHA, not a mutable tag, and
+  `just pin-check` fails the build if one is not. Dependabot bumps the pins.
+- Workflows default to `permissions: read-all`, with each job requesting only
+  what it needs.
+- The container base image is pinned by digest.
+- CI runs gosec (SAST), govulncheck and Trivy (SCA), and CodeQL, with findings
+  going to the Security tab rather than only a log. The built image is scanned,
+  not just the source tree.
+- Releases are signed with cosign keyless signing, ship an SBOM per archive, and
+  carry build provenance attestation. Verify an image with:
+
+  ```bash
+  cosign verify ghcr.io/theorigamicorporation/toc-whmcs-mcp@sha256:... \
+    --certificate-identity-regexp='^https://github.com/theorigamicorporation/toc-whmcs-mcp/' \
+    --certificate-oidc-issuer=https://token.actions.githubusercontent.com
+  ```
+
+Report vulnerabilities privately: see [SECURITY.md](SECURITY.md).
 
 The specification lives in `openspec/`. Changes to behaviour should update it
 first:
