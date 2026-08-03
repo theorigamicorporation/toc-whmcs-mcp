@@ -64,26 +64,38 @@ type Config struct {
 // when debugging a container: the environment is the deployment's opinion, the
 // flag is the operator's.
 func Load(args []string) (Config, error) {
+	// The env file is resolved before anything else reads the environment,
+	// because everything below is populated from it. Its own path can only come
+	// from a flag or from the environment, never from the file itself.
+	var fileValues map[string]string
+	if path := envFilePath(args); path != "" {
+		var err error
+		if fileValues, err = loadEnvFile(path); err != nil {
+			return Config{}, err
+		}
+	}
+	src := source{file: fileValues}
+
 	cfg := Config{
-		BaseURL:          env("WHMCS_URL", ""),
-		Identifier:       env("API_IDENTIFIER", ""),
-		Secret:           env("API_SECRET", ""),
-		AccessKey:        env("API_ACCESS_KEY", ""),
-		AllowDestructive: envBool("ALLOW_DESTRUCTIVE", false),
-		Allowlist:        envList("TOOL_ALLOWLIST"),
-		Addr:             env("ADDR", "127.0.0.1:8080"),
-		AuthToken:        env("AUTH_TOKEN", ""),
-		RequestTimeout:   envDuration("REQUEST_TIMEOUT", whmcs.DefaultTimeout),
-		MaxResponseBytes: int64(envInt("MAX_RESPONSE_BYTES", whmcs.DefaultMaxResponseBytes)),
-		MaxRetries:       envInt("MAX_RETRIES", whmcs.DefaultMaxRetries),
-		DefaultPageSize:  envInt("DEFAULT_PAGE_SIZE", 25),
-		MaxPageSize:      envInt("MAX_PAGE_SIZE", 200),
-		ConfirmTTL:       envDuration("CONFIRM_TTL", 5*time.Minute),
+		BaseURL:          src.env("WHMCS_URL", ""),
+		Identifier:       src.env("API_IDENTIFIER", ""),
+		Secret:           src.env("API_SECRET", ""),
+		AccessKey:        src.env("API_ACCESS_KEY", ""),
+		AllowDestructive: src.envBool("ALLOW_DESTRUCTIVE", false),
+		Allowlist:        src.envList("TOOL_ALLOWLIST"),
+		Addr:             src.env("ADDR", "127.0.0.1:8080"),
+		AuthToken:        src.env("AUTH_TOKEN", ""),
+		RequestTimeout:   src.envDuration("REQUEST_TIMEOUT", whmcs.DefaultTimeout),
+		MaxResponseBytes: int64(src.envInt("MAX_RESPONSE_BYTES", whmcs.DefaultMaxResponseBytes)),
+		MaxRetries:       src.envInt("MAX_RETRIES", whmcs.DefaultMaxRetries),
+		DefaultPageSize:  src.envInt("DEFAULT_PAGE_SIZE", 25),
+		MaxPageSize:      src.envInt("MAX_PAGE_SIZE", 200),
+		ConfirmTTL:       src.envDuration("CONFIRM_TTL", 5*time.Minute),
 	}
 
-	profileRaw := env("PROFILE", "")
-	transportRaw := env("TRANSPORT", string(TransportStdio))
-	logLevelRaw := env("LOG_LEVEL", "info")
+	profileRaw := src.env("PROFILE", "")
+	transportRaw := src.env("TRANSPORT", string(TransportStdio))
+	logLevelRaw := src.env("LOG_LEVEL", "info")
 
 	fs := flag.NewFlagSet("toc-whmcs-mcp", flag.ContinueOnError)
 	fs.StringVar(&cfg.BaseURL, "whmcs-url", cfg.BaseURL, "WHMCS base URL, e.g. https://billing.example.com")
@@ -100,6 +112,11 @@ func Load(args []string) (Config, error) {
 	fs.IntVar(&cfg.MaxPageSize, "max-page-size", cfg.MaxPageSize, "ceiling applied to any requested limit")
 	fs.DurationVar(&cfg.ConfirmTTL, "confirm-ttl", cfg.ConfirmTTL, "confirmation token lifetime")
 	fs.StringVar(&logLevelRaw, "log-level", logLevelRaw, "log level: debug, info, warn, error")
+
+	// Declared so -help lists it and an unknown-flag error is not raised;
+	// envFilePath has already consumed it.
+	fs.String("env-file", os.Getenv(EnvFileVar),
+		"read KEY=VALUE settings from this file; values already in the environment win")
 
 	allowlistRaw := strings.Join(cfg.Allowlist, ",")
 	fs.StringVar(&allowlistRaw, "tool-allowlist", allowlistRaw, "comma-separated tool names; narrows the profile, never widens it")
@@ -260,18 +277,57 @@ func parseLevel(s string) (slog.Level, error) {
 	}
 }
 
+// source resolves settings from the process environment first and an env file
+// second, so an explicit environment value always wins over a file default.
+type source struct {
+	file map[string]string
+}
+
+// lookup returns a value from the environment, falling back to the env file.
+func (s source) lookup(key string) (string, bool) {
+	if v, ok := os.LookupEnv(EnvPrefix + key); ok {
+		return strings.TrimSpace(v), true
+	}
+	if v, ok := s.file[EnvPrefix+key]; ok {
+		return strings.TrimSpace(v), true
+	}
+	return "", false
+}
+
+// envFilePath finds the env file to load, from -env-file or the environment.
+//
+// This runs before flag parsing, because the file it names supplies the
+// defaults that flag parsing then reads. It deliberately understands only the
+// forms the flag package accepts for this one flag, and ignores everything
+// else rather than trying to be a second parser.
+func envFilePath(args []string) string {
+	for i, a := range args {
+		switch {
+		case a == "-env-file" || a == "--env-file":
+			if i+1 < len(args) {
+				return args[i+1]
+			}
+		case strings.HasPrefix(a, "-env-file="):
+			return strings.TrimPrefix(a, "-env-file=")
+		case strings.HasPrefix(a, "--env-file="):
+			return strings.TrimPrefix(a, "--env-file=")
+		}
+	}
+	return os.Getenv(EnvFileVar)
+}
+
 // --- environment helpers ---------------------------------------------------
 
-func env(key, def string) string {
-	if v, ok := os.LookupEnv(EnvPrefix + key); ok {
-		return strings.TrimSpace(v)
+func (s source) env(key, def string) string {
+	if v, ok := s.lookup(key); ok {
+		return v
 	}
 	return def
 }
 
-func envBool(key string, def bool) bool {
-	raw := env(key, "")
-	if raw == "" {
+func (s source) envBool(key string, def bool) bool {
+	raw, ok := s.lookup(key)
+	if !ok || raw == "" {
 		return def
 	}
 	b, err := strconv.ParseBool(raw)
@@ -281,9 +337,9 @@ func envBool(key string, def bool) bool {
 	return b
 }
 
-func envInt(key string, def int) int {
-	raw := env(key, "")
-	if raw == "" {
+func (s source) envInt(key string, def int) int {
+	raw, ok := s.lookup(key)
+	if !ok || raw == "" {
 		return def
 	}
 	n, err := strconv.Atoi(raw)
@@ -293,9 +349,9 @@ func envInt(key string, def int) int {
 	return n
 }
 
-func envDuration(key string, def time.Duration) time.Duration {
-	raw := env(key, "")
-	if raw == "" {
+func (s source) envDuration(key string, def time.Duration) time.Duration {
+	raw, ok := s.lookup(key)
+	if !ok || raw == "" {
 		return def
 	}
 	d, err := time.ParseDuration(raw)
@@ -305,8 +361,11 @@ func envDuration(key string, def time.Duration) time.Duration {
 	return d
 }
 
-func envList(key string) []string { return splitList(env(key, "")) }
+func (s source) envList(key string) []string { return splitList(s.env(key, "")) }
 
+// splitList parses a comma-separated setting, dropping blank entries so that a
+// trailing comma or a stray space does not become a tool name that matches
+// nothing.
 func splitList(raw string) []string {
 	if strings.TrimSpace(raw) == "" {
 		return nil

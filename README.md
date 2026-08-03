@@ -91,6 +91,15 @@ claude mcp add whmcs \
   -- "$BIN"
 ```
 
+Prefer not to put the secret in your MCP client's config, where it sits in
+plain text? Put it in a `0600` file and pass a path instead:
+
+```sh
+claude mcp add whmcs -- toc-whmcs-mcp -env-file "$HOME/.config/toc-whmcs-mcp/env"
+```
+
+See [docs/configuration.md](docs/configuration.md#keeping-the-credential-out-of-client-config).
+
 If `-healthcheck` reports `Invalid IP`, the credential is fine and the machine's
 IP is not on the WHMCS API allowlist: **System Settings > General Settings >
 Security**.
