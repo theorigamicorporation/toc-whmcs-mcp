@@ -239,8 +239,22 @@ func genericParams(args Args) (map[string]any, error) {
 	}
 	params, ok := raw.(map[string]any)
 	if !ok {
-		return nil, errs.New(errs.CodeInvalidParams,
-			"parameters must be an object mapping parameter names to values, got %T", raw)
+		// Some clients serialise an object argument as a JSON string. Parsing
+		// it is friendlier than refusing, and the result is validated against
+		// the action's real schema either way.
+		if encoded, isString := raw.(string); isString {
+			if strings.TrimSpace(encoded) == "" {
+				return map[string]any{}, nil
+			}
+			if err := json.Unmarshal([]byte(encoded), &params); err != nil {
+				return nil, errs.New(errs.CodeInvalidParams,
+					"parameters must be an object mapping parameter names to values; "+
+						"received a string that is not valid JSON")
+			}
+		} else {
+			return nil, errs.New(errs.CodeInvalidParams,
+				"parameters must be an object mapping parameter names to values, got %T", raw)
+		}
 	}
 	for k, v := range params {
 		switch v.(type) {

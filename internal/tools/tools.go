@@ -389,6 +389,18 @@ func (a Arg) option() mcp.ToolOption {
 		return mcp.WithNumber(a.Name, props...)
 	case "boolean":
 		return mcp.WithBoolean(a.Name, props...)
+	case "object":
+		// Free-form: the accepted keys depend on the WHMCS action chosen at
+		// call time, so they cannot be enumerated in the schema. Validation
+		// happens against the registry once the action is known.
+		//
+		// Declaring this correctly matters more than it looks. Falling through
+		// to WithString here published `parameters` as a string, so every
+		// client sent one, and whmcs_call_action rejected every call. That made
+		// the escape hatch unreachable, and with it the 147 actions that have
+		// no purpose-built tool.
+		props = append(props, mcp.AdditionalProperties(true))
+		return mcp.WithObject(a.Name, props...)
 	default:
 		return mcp.WithString(a.Name, props...)
 	}
