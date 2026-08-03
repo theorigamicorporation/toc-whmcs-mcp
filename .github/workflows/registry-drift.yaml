@@ -1,0 +1,66 @@
+# The committed action registry is generated from the vendor's published API
+# reference. This job re-runs the generator and fails if the committed file is
+# stale, which is how a WHMCS API change reaches us.
+#
+# It is not part of ci.yml because it needs network access to a third-party
+# site: a vendor outage should not block a pull request.
+name: registry-drift
+
+on:
+  schedule:
+    # Weekly, Monday morning.
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+
+permissions: read-all
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: .tool-versions
+          cache: true
+
+      # Fails when the vendor has changed a parameter schema, or added an
+      # action that nobody has classified yet. Both need a human: an
+      # unclassified action defaults to write at runtime, and a new destructive
+      # action must be recognised as one.
+      - name: check the registry against the vendor documentation
+        id: drift
+        run: go run ./cmd/docgen -check
+
+      - name: open an issue when the registry is stale
+        if: failure()
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        with:
+          script: |
+            const title = 'WHMCS API registry is out of date'
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'registry-drift',
+            })
+            if (existing.data.length > 0) return
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              labels: ['registry-drift'],
+              body: [
+                'The scheduled registry check failed. The vendor documentation has changed.',
+                '',
+                'Run `just gen` and review the diff. If a new action appeared, generation will',
+                'fail until it is classified in `internal/registry/classification.go`.',
+                'Classify conservatively: anything that moves money, changes provisioning,',
+                'alters global configuration, or mails a customer is destructive.',
+                '',
+                `Workflow run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              ].join('\n'),
+            })

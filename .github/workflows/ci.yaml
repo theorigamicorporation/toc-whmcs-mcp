@@ -1,0 +1,248 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# Default to no permissions; each job asks for exactly what it needs. A
+# compromised action in any job then cannot write to the repository.
+permissions: read-all
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# Every action is pinned to a commit SHA, not a tag. A tag is mutable: whoever
+# controls the action repository can repoint it at different code. This server
+# holds a credential to a billing system, so its build pipeline is part of its
+# attack surface.
+
+jobs:
+  build-and-test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      # Promoted to env because the secrets context is not available in a step
+      # `if`. Codecov is optional: the coverage gate above is the real check,
+      # and CI must not fail on a private repo with no Codecov plan.
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: .tool-versions
+          cache: true
+
+      - name: Verify go.mod and go.sum are tidy
+        run: |
+          go mod tidy
+          git diff --exit-code go.mod go.sum
+
+      - name: Check formatting
+        run: |
+          files=$(gofmt -s -l .)
+          if [ -n "$files" ]; then
+            echo "::error::the following files are not gofmt -s clean:"
+            echo "$files"
+            exit 1
+          fi
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Build
+        run: go build ./...
+
+      # -shuffle=on catches tests that only pass in declaration order, which
+      # matters here because the confirmation store and the fake WHMCS instance
+      # are stateful. -coverpkg attributes the protocol tests in internal/app
+      # to the packages they actually exercise.
+      - name: Test with race detector and coverage
+        run: |
+          go test -race -shuffle=on \
+            -coverpkg=./... -coverprofile=coverage.out -covermode=atomic ./...
+
+      - name: Check coverage threshold
+        env:
+          THRESHOLD: "65"
+        run: |
+          COVERAGE=$(go tool cover -func=coverage.out | grep '^total:' | awk '{print $3}' | tr -d '%')
+          echo "Total coverage: ${COVERAGE}% (threshold ${THRESHOLD}%)"
+          echo "Coverage: ${COVERAGE}%" >> "$GITHUB_STEP_SUMMARY"
+          if awk "BEGIN {exit !($COVERAGE < $THRESHOLD)}"; then
+            echo "::error::coverage ${COVERAGE}% is below the ${THRESHOLD}% threshold"
+            exit 1
+          fi
+
+      # The packages that decide whether a destructive operation runs are held
+      # to a higher bar than the codebase as a whole. A drop here is a real
+      # regression even when the overall number looks fine.
+      - name: Check safety-critical package coverage
+        env:
+          SAFETY_THRESHOLD: "80"
+        run: |
+          fail=0
+          for pkg in policy confirm redact shape untrusted whmcs; do
+            pct=$(go test -cover "./internal/${pkg}/..." 2>/dev/null \
+              | grep -oE 'coverage: [0-9.]+%' | head -1 | grep -oE '[0-9.]+')
+            [ -z "$pct" ] && pct=0
+            printf 'internal/%-10s %s%%\n' "$pkg" "$pct"
+            if awk "BEGIN {exit !($pct < $SAFETY_THRESHOLD)}"; then
+              echo "::error::internal/${pkg} coverage ${pct}% is below the ${SAFETY_THRESHOLD}% safety threshold"
+              fail=1
+            fi
+          done
+          exit $fail
+
+      - name: Upload coverage to Codecov
+        if: env.CODECOV_TOKEN != ''
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v6
+        with:
+          token: ${{ env.CODECOV_TOKEN }}
+          files: coverage.out
+          fail_ci_if_error: false
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: .tool-versions
+          cache: true
+
+      - uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9
+        with:
+          version: v2.12.2
+
+      # A copyleft dependency would impose source-disclosure obligations that
+      # conflict with shipping this closed. Catching it when the dependency is
+      # added is much cheaper than catching it in a legal review.
+      - name: Check dependency licences
+        run: ./scripts/gen-licenses.sh --check
+
+      - name: Lint workflows
+        run: |
+          go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
+          actionlint
+
+  sast:
+    name: SAST (gosec)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: .tool-versions
+          cache: true
+
+      - name: Install gosec
+        run: go install github.com/securego/gosec/v2/cmd/gosec@v2.28.0
+
+      # The scan result is the gate: findings fail the job. The SARIF upload
+      # below is a bonus, not the control, because code scanning needs GitHub
+      # Advanced Security and this repository is private without it.
+      - name: Run gosec
+        run: gosec -fmt sarif -out gosec.sarif ./...
+
+      - name: Upload SARIF
+        # Best effort: fails with "Resource not accessible by integration"
+        # until Advanced Security is enabled. Leaving it in means the Security
+        # tab starts working the day it is, with no workflow change.
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@d1ba80a13dd99fba24a470575428917156a28b43 # v4
+        with:
+          sarif_file: gosec.sarif
+          category: gosec
+
+  sca:
+    name: SCA (govulncheck + trivy)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: .tool-versions
+          cache: true
+
+      - name: Install govulncheck
+        run: go install golang.org/x/vuln/cmd/govulncheck@v1.1.4
+
+      # govulncheck is call-graph aware, so it only reports vulnerabilities in
+      # code paths this binary actually reaches.
+      - name: Run govulncheck
+        run: govulncheck ./...
+
+      # Two passes: one that fails the build on a finding, one that produces
+      # SARIF for the Security tab. The SARIF format has no exit code, so it
+      # cannot be the gate on its own.
+      - name: Run Trivy (filesystem scan)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: table
+          severity: CRITICAL,HIGH
+          exit-code: "1"
+
+      - name: Trivy SARIF report
+        if: always()
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: sarif
+          output: trivy.sarif
+          severity: CRITICAL,HIGH
+
+      - name: Upload Trivy SARIF
+        # Best effort, as above: needs Advanced Security on a private repo.
+        continue-on-error: true
+        if: always()
+        uses: github/codeql-action/upload-sarif@d1ba80a13dd99fba24a470575428917156a28b43 # v4
+        with:
+          sarif_file: trivy.sarif
+          category: trivy
+
+  image:
+    name: Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      # Build only. Publishing happens on a release, never from a pull request.
+      - name: Build image
+        run: |
+          docker build \
+            --build-arg VERSION=ci-${{ github.sha }} \
+            --build-arg COMMIT=${{ github.sha }} \
+            -t toc-whmcs-mcp:ci .
+
+      - name: The binary runs and reports its version
+        run: docker run --rm toc-whmcs-mcp:ci --version
+
+      # The image is the artifact that reaches production, so scan the image,
+      # not only the source tree it was built from.
+      - name: Scan image
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: image
+          image-ref: toc-whmcs-mcp:ci
+          severity: CRITICAL,HIGH
+          exit-code: "1"

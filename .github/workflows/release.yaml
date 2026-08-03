@@ -1,0 +1,33 @@
+# Cuts a release from a hand-pushed tag. The normal path is
+# release-please.yaml; this one exists for a hotfix or a re-cut.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to build and publish, e.g. v1.2.0"
+        required: true
+        type: string
+
+# A job that calls a reusable workflow cannot request more than the caller
+# workflow itself grants, so the write scopes have to be declared here as the
+# ceiling. Each job below still narrows to only what it needs.
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+  attestations: write
+
+jobs:
+  artifacts:
+    uses: ./.github/workflows/release-artifacts.yaml
+    with:
+      ref: ${{ inputs.tag || github.ref_name }}
+    permissions:
+      contents: write
+      packages: write
+      id-token: write
+      attestations: write

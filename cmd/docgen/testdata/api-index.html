@@ -1,0 +1,258 @@
+<!--
+  Trimmed excerpt of vendor documentation, retained solely as a parser test
+  fixture so that cmd/docgen can be tested offline.
+
+  Source: https://developers.whmcs.com/api/api-index/
+  Retrieved: 2026-08-03
+
+  Only the fragment the parser reads is kept: the title, the summary paragraph
+  and the parameter tables. Site navigation, styling, scripts and marketing
+  content have been removed, both because they are irrelevant to the test and to
+  keep the amount of copied vendor material to the minimum the test needs.
+
+  WHMCS is a trademark of its respective owner. This repository is not
+  affiliated with, endorsed by, or sponsored by WHMCS.
+-->
+<html><body>
+<h1>API Index </h1>
+
+			<div class="row"><div class="col-sm-6">
+<h3>Orders</h3>
+
+<ul><li> <a href="//developers.whmcs.com/api-reference/acceptorder/">AcceptOrder</a>
+<li> <a href="//developers.whmcs.com/api-reference/addorder/">AddOrder</a>
+<li> <a href="//developers.whmcs.com/api-reference/cancelorder/">CancelOrder</a>
+<li> <a href="//developers.whmcs.com/api-reference/deleteorder/">DeleteOrder</a>
+<li> <a href="//developers.whmcs.com/api-reference/fraudorder/">FraudOrder</a>
+<li> <a href="//developers.whmcs.com/api-reference/getorders/">GetOrders</a>
+<li> <a href="//developers.whmcs.com/api-reference/getorderstatuses/">GetOrderStatuses</a>
+<li> <a href="//developers.whmcs.com/api-reference/getproducts/">GetProducts</a>
+<li> <a href="//developers.whmcs.com/api-reference/getpromotions/">GetPromotions</a>
+<li> <a href="//developers.whmcs.com/api-reference/orderfraudcheck/">OrderFraudCheck</a>
+<li> <a href="//developers.whmcs.com/api-reference/pendingorder/">PendingOrder</a>
+</ul>
+<h3>Billing</h3>
+
+<ul><li> <a href="//developers.whmcs.com/api-reference/acceptquote/">AcceptQuote</a>
+<li> <a href="//developers.whmcs.com/api-reference/addbillableitem/">AddBillableItem</a>
+<li> <a href="//developers.whmcs.com/api-reference/addcredit/">AddCredit</a>
+<li> <a href="//developers.whmcs.com/api-reference/addinvoicepayment/">AddInvoicePayment</a>
+<li> <a href="//developers.whmcs.com/api-reference/addpaymethod/">AddPayMethod</a>
+<li> <a href="//developers.whmcs.com/api-reference/addtransaction/">AddTransaction</a>
+<li> <a href="//developers.whmcs.com/api-reference/applycredit/">ApplyCredit</a>
+<li> <a href="//developers.whmcs.com/api-reference/capturepayment/">CapturePayment</a>
+<li> <a href="//developers.whmcs.com/api-reference/createinvoice/">CreateInvoice</a>
+<li> <a href="//developers.whmcs.com/api-reference/createquote/">CreateQuote</a>
+<li> <a href="//developers.whmcs.com/api-reference/deletepaymethod/">DeletePayMethod</a>
+<li> <a href="//developers.whmcs.com/api-reference/deletequote/">DeleteQuote</a>
+<li> <a href="//developers.whmcs.com/api-reference/geninvoices/">GenInvoices</a>
+<li> <a href="//developers.whmcs.com/api-reference/getcredits/">GetCredits</a>
+<li> <a href="//developers.whmcs.com/api-reference/getinvoice/">GetInvoice</a>
+<li> <a href="//developers.whmcs.com/api-reference/getinvoices/">GetInvoices</a>
+<li> <a href="//developers.whmcs.com/api-reference/getpaymethods/">GetPayMethods</a>
+<li> <a href="//developers.whmcs.com/api-reference/getquotes/">GetQuotes</a>
+<li> <a href="//developers.whmcs.com/api-reference/gettransactions/">GetTransactions</a>
+<li> <a href="//developers.whmcs.com/api-reference/sendquote/">SendQuote</a>
+<li> <a href="//developers.whmcs.com/api-reference/updateinvoice/">UpdateInvoice</a>
+<li> <a href="//developers.whmcs.com/api-reference/updatepaymethod/">UpdatePayMethod</a>
+<li> <a href="//developers.whmcs.com/api-reference/updatequote/">UpdateQuote</a>
+<li> <a href="//developers.whmcs.com/api-reference/updatetransaction/">UpdateTransaction</a>
+</ul>
+<h3>Module</h3>
+
+<ul><li> <a href="//developers.whmcs.com/api-reference/activatemodule/">ActivateModule</a>
+<li> <a href="//developers.whmcs.com/api-reference/deactivatemodule/">DeactivateModule</a>
+<li> <a href="//developers.whmcs.com/api-reference/getmoduleconfigurationparameters/">GetModuleConfigurationParameters</a>
+<li> <a href="//developers.whmcs.com/api-reference/getmodulequeue/">GetModuleQueue</a>
+<li> <a href="//developers.whmcs.com/api-reference/updatemoduleconfiguration/">UpdateModuleConfiguration</a>
+</ul>
+<h3>Support</h3>
+
+<ul><li> <a href="//developers.whmcs.com/api-reference/addannouncement/">AddAnnouncement</a>
+<li> <a href="//developers.whmcs.com/api-reference/addcancelrequest/">AddCancelRequest</a>
+<li> <a href="//developers.whmcs.com/api-reference/addclientnote/">AddClientNote</a>
+<li> <a href="//developers.whmcs.com/api-reference/addticketnote/">AddTicketNote</a>
+<li> <a href="//developers.whmcs.com/api-reference/addticketreply/">AddTicketReply</a>
+<li> <a href="//developers.whmcs.com/api-reference/blockticketsender/">BlockTicketSender</a>
+<li> <a href="//developers.whmcs.com/api-reference/deleteannouncement/">DeleteAnnouncement</a>
+<li> <a href="//developers.whmcs.com/api-reference/deleteticket/">DeleteTicket</a>
+<li> <a href="//developers.whmcs.com/api-reference/deleteticketnote/">DeleteTicketNote</a>
+<li> <a href="//developers.whmcs.com/api-reference/deleteticketreply/">DeleteTicketReply</a>
+<li> <a href="//developers.whmcs.com/api-reference/getannouncements/">GetAnnouncements</a>
+<li> <a href="//developers.whmcs.com/api-reference/mergeticket/">MergeTicket</a>
+<li> <a href="//developers.whmcs.com/api-reference/openticket/">OpenTicket</a>
+<li> <a href="//developers.whmcs.com/api-reference/updateticket/">UpdateTicket</a>
+<li> <a href="//developers.whmcs.com/api-reference/updateticketreply/">UpdateTicketReply</a>
+</ul>
+<h3>System</h3>
+
+<ul><li> <a href="//developers.whmcs.com/api-reference/addbannedip/">AddBannedIp</a>
+<li> <a href="//developers.whmcs.com/api-reference/decryptpassword/">DecryptPassword</a>
+<li> <a href="//developers.whmcs.com/api-reference/encryptpassword/">EncryptPassword</a>
+<li> <a href="//developers.whmcs.com/api-reference/getactivitylog/">GetActivityLog</a>
+<li> <a href="//developers.whmcs.com/api-reference/getadmindetails/">GetAdminDetails</a>
+<li> <a href="//developers.whmcs.com/api-reference/getadminusers/">GetAdminUsers</a>
+<li> <a href="//developers.whmcs.com/api-reference/getautomationlog/">GetAutomationLog</a>
+<li> <a href="//developers.whmcs.com/api-reference/getconfigurationvalue/">GetConfigurationValue</a>
+<li> <a href="//developers.whmcs.com/api-reference/getcurrencies/">GetCurrencies</a>
+<li> <a href="//developers.whmcs.com/api-reference/getemailtemplates/">GetEmailTemplates</a>
+<li> <a href="//developers.whmcs.com/api-reference/getpaymentmethods/">GetPaymentMethods</a>
+<li> <a href="//developers.whmcs.com/api-reference/getstaffonline/">GetStaffOnline</a>
+<li> <a href="//developers.whmcs.com/api-reference/getstats/">GetStats</a>
+<li> <a href="//developers.whmcs.com/api-reference/gettodoitems/">GetToDoItems</a>
+<li> <a href="//developers.whmcs.com/api-reference/gettodoitemstatuses/">GetToDoItemStatuses</a>
+<li> <a href="//developers.whmcs.com/api-reference/logactivity/">LogActivity</a>
+<li> <a href="//developers.whmcs.com/api-reference/sendadminemail/">SendAdminEmail</a>
+<li> <a href="//developers.whmcs.com/api-reference/sendemail/">SendEmail</a>
+<li> <a href="//developers.whmcs.com/api-reference/setconfigurationvalue/">SetConfigurationValue</a>
+<li> <a href="//developers.whmcs.com/api-reference/triggernotificationevent/">TriggerNotificationEvent</a>
+<li> <a href="//developers.whmcs.com/api-reference/updateadminnotes/">UpdateAdminNotes</a>
+<li> <a href="//developers.whmcs.com/api-reference/updateannouncement/">UpdateAnnouncement</a>
+<li> <a href="//developers.whmcs.com/api-reference/updatetodoitem/">UpdateToDoItem</a>
+<li> <a href="//developers.whmcs.com/api-reference/whmcsdetails/">WhmcsDetails</a>
+</ul>
+<h3>Client</h3>
+
+<ul><li> <a href="//developers.whmcs.com/api-reference/addclient/">AddClient</a>
+<li> <a href="//developers.whmcs.com/api-reference/addcontact/">AddContact</a>
+<li> <a href="//developers.whmcs.com/api-reference/closeclient/">CloseClient</a>
+<li> <a href="//developers.whmcs.com/api-reference/deleteclient/">DeleteClient</a>
+<li> <a href="//developers.whmcs.com/api-reference/deletecontact/">DeleteContact</a>
+<li> <a href="//developers.whmcs.com/api-reference/getcancelledpackages/">GetCancelledPackages</a>
+<li> <a href="//developers.whmcs.com/api-reference/getclientgroups/">GetClientGroups</a>
+<li> <a href="//developers.whmcs.com/api-reference/getclientpassword/">GetClientPassword</a>
+<li> <a href="//developers.whmcs.com/api-reference/getclients/">GetClients</a>
+<li> <a href="//developers.whmcs.com/api-reference/getclientsaddons/">GetClientsAddons</a>
+<li> <a href="//developers.whmcs.com/api-reference/getclientsdetails/">GetClientsDetails</a>
+<li> <a href="//developers.whmcs.com/api-reference/getclientsdomains/">GetClientsDomains</a>
+<li> <a href="//developers.whmcs.com/api-reference/getclientsproducts/">GetClientsProducts</a>
+<li> <a href="//developers.whmcs.com/api-reference/getcontacts/">GetContacts</a>
+<li> <a href="//developers.whmcs.com/api-reference/getemails/">GetEmails</a>
+<li> <a href="//developers.whmcs.com/api-reference/updateclient/">UpdateClient</a>
+<li> <a href="//developers.whmcs.com/api-reference/updatecontact/">UpdateContact</a>
+</ul>
+<h3>Products</h3>
+
+<ul><li> <a href="//developers.whmcs.com/api-reference/addproduct/">AddProduct</a>
+</ul>
+<h3>Project Management</h3>
+
+<ul><li> <a href="//developers.whmcs.com/api-reference/addprojectmessage/">AddProjectMessage</a>
+<li> <a href="//developers.whmcs.com/api-reference/addprojecttask/">AddProjectTask</a>
+<li> <a href="//developers.whmcs.com/api-reference/createproject/">CreateProject</a>
+<li> <a href="//developers.whmcs.com/api-reference/deleteprojecttask/">DeleteProjectTask</a>
+<li> <a href="//developers.whmcs.com/api-reference/endtasktimer/">EndTaskTimer</a>
+<li> <a href="//developers.whmcs.com/api-reference/getproject/">GetProject</a>
+<li> <a href="//developers.whmcs.com/api-reference/getprojects/">GetProjects</a>
+<li> <a href="//developers.whmcs.com/api-reference/starttasktimer/">StartTaskTimer</a>
+<li> <a href="//developers.whmcs.com/api-reference/updateproject/">UpdateProject</a>
+<li> <a href="//developers.whmcs.com/api-reference/updateprojecttask/">UpdateProjectTask</a>
+</ul>
+</div><div class="col-sm-6"><h3>Users</h3>
+
+<ul><li> <a href="//developers.whmcs.com/api-reference/adduser/">AddUser</a>
+<li> <a href="//developers.whmcs.com/api-reference/createclientinvite/">CreateClientInvite</a>
+<li> <a href="//developers.whmcs.com/api-reference/deleteuserclient/">DeleteUserClient</a>
+<li> <a href="//developers.whmcs.com/api-reference/getpermissionslist/">GetPermissionsList</a>
+<li> <a href="//developers.whmcs.com/api-reference/getuserpermissions/">GetUserPermissions</a>
+<li> <a href="//developers.whmcs.com/api-reference/getusers/">GetUsers</a>
+<li> <a href="//developers.whmcs.com/api-reference/resetpassword/">ResetPassword</a>
+<li> <a href="//developers.whmcs.com/api-reference/updateuser/">UpdateUser</a>
+<li> <a href="//developers.whmcs.com/api-reference/updateuserpermissions/">UpdateUserPermissions</a>
+</ul>
+<h3>Affiliates</h3>
+
+<ul><li> <a href="//developers.whmcs.com/api-reference/affiliateactivate/">AffiliateActivate</a>
+<li> <a href="//developers.whmcs.com/api-reference/getaffiliates/">GetAffiliates</a>
+</ul>
+<h3>Authentication</h3>
+
+<ul><li> <a href="//developers.whmcs.com/api-reference/createoauthcredential/">CreateOAuthCredential</a>
+<li> <a href="//developers.whmcs.com/api-reference/createssotoken/">CreateSsoToken</a>
+<li> <a href="//developers.whmcs.com/api-reference/deleteoauthcredential/">DeleteOAuthCredential</a>
+<li> <a href="//developers.whmcs.com/api-reference/listoauthcredentials/">ListOAuthCredentials</a>
+<li> <a href="//developers.whmcs.com/api-reference/updateoauthcredential/">UpdateOAuthCredential</a>
+<li> <a href="//developers.whmcs.com/api-reference/validatelogin/">ValidateLogin</a>
+</ul>
+<h3>Domains</h3>
+
+<ul><li> <a href="//developers.whmcs.com/api-reference/createorupdatetld/">CreateOrUpdateTLD</a>
+<li> <a href="//developers.whmcs.com/api-reference/domaingetlockingstatus/">DomainGetLockingStatus</a>
+<li> <a href="//developers.whmcs.com/api-reference/domaingetnameservers/">DomainGetNameservers</a>
+<li> <a href="//developers.whmcs.com/api-reference/domaingetwhoisinfo/">DomainGetWhoisInfo</a>
+<li> <a href="//developers.whmcs.com/api-reference/domainregister/">DomainRegister</a>
+<li> <a href="//developers.whmcs.com/api-reference/domainrelease/">DomainRelease</a>
+<li> <a href="//developers.whmcs.com/api-reference/domainrenew/">DomainRenew</a>
+<li> <a href="//developers.whmcs.com/api-reference/domainrequestepp/">DomainRequestEPP</a>
+<li> <a href="//developers.whmcs.com/api-reference/domaintoggleidprotect/">DomainToggleIdProtect</a>
+<li> <a href="//developers.whmcs.com/api-reference/domaintransfer/">DomainTransfer</a>
+<li> <a href="//developers.whmcs.com/api-reference/domainupdatelockingstatus/">DomainUpdateLockingStatus</a>
+<li> <a href="//developers.whmcs.com/api-reference/domainupdatenameservers/">DomainUpdateNameservers</a>
+<li> <a href="//developers.whmcs.com/api-reference/domainupdatewhoisinfo/">DomainUpdateWhoisInfo</a>
+<li> <a href="//developers.whmcs.com/api-reference/domainwhois/">DomainWhois</a>
+<li> <a href="//developers.whmcs.com/api-reference/getregistrars/">GetRegistrars</a>
+<li> <a href="//developers.whmcs.com/api-reference/gettldpricing/">GetTLDPricing</a>
+<li> <a href="//developers.whmcs.com/api-reference/updateclientdomain/">UpdateClientDomain</a>
+</ul>
+<h3>Servers</h3>
+
+<ul><li> <a href="//developers.whmcs.com/api-reference/gethealthstatus/">GetHealthStatus</a>
+<li> <a href="//developers.whmcs.com/api-reference/getservers/">GetServers</a>
+</ul>
+<h3>Tickets</h3>
+
+<ul><li> <a href="//developers.whmcs.com/api-reference/getsupportdepartments/">GetSupportDepartments</a>
+<li> <a href="//developers.whmcs.com/api-reference/getsupportstatuses/">GetSupportStatuses</a>
+<li> <a href="//developers.whmcs.com/api-reference/getticket/">GetTicket</a>
+<li> <a href="//developers.whmcs.com/api-reference/getticketattachment/">GetTicketAttachment</a>
+<li> <a href="//developers.whmcs.com/api-reference/getticketcounts/">GetTicketCounts</a>
+<li> <a href="//developers.whmcs.com/api-reference/getticketnotes/">GetTicketNotes</a>
+<li> <a href="//developers.whmcs.com/api-reference/getticketpredefinedcats/">GetTicketPredefinedCats</a>
+<li> <a href="//developers.whmcs.com/api-reference/getticketpredefinedreplies/">GetTicketPredefinedReplies</a>
+<li> <a href="//developers.whmcs.com/api-reference/gettickets/">GetTickets</a>
+</ul>
+<h3>Service</h3>
+
+<ul><li> <a href="//developers.whmcs.com/api-reference/modulechangepackage/">ModuleChangePackage</a>
+<li> <a href="//developers.whmcs.com/api-reference/modulechangepw/">ModuleChangePw</a>
+<li> <a href="//developers.whmcs.com/api-reference/modulecreate/">ModuleCreate</a>
+<li> <a href="//developers.whmcs.com/api-reference/modulecustom/">ModuleCustom</a>
+<li> <a href="//developers.whmcs.com/api-reference/modulesuspend/">ModuleSuspend</a>
+<li> <a href="//developers.whmcs.com/api-reference/moduleterminate/">ModuleTerminate</a>
+<li> <a href="//developers.whmcs.com/api-reference/moduleunsuspend/">ModuleUnsuspend</a>
+<li> <a href="//developers.whmcs.com/api-reference/updateclientproduct/">UpdateClientProduct</a>
+<li> <a href="//developers.whmcs.com/api-reference/upgradeproduct/">UpgradeProduct</a>
+</ul>
+<h3>Addons</h3>
+
+<ul><li> <a href="//developers.whmcs.com/api-reference/updateclientaddon/">UpdateClientAddon</a>
+</ul>
+</div></div>
+
+
+			<div class="topic-navigation clearfix">
+                
+                
+            </div>
+
+	<div class="results" role="status" aria-live="polite">
+		<div class="scrollable">
+			<div class="wrapper">
+				<div class="meta"></div>
+				<div class="list"></div>
+			</div>
+		</div>
+	</div>
+
+        </div>
+  </div>
+</div>
+</main>
+
+
+<footer class="footer">
+    <div class="container">
+        <div class="row">
+            <nav>
+                <div class="col-sm-3">
+</body></html>

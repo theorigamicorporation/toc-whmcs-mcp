@@ -1,0 +1,35 @@
+coverage:
+  status:
+    project:
+      default:
+        target: 65%
+        threshold: 2%
+      # The packages that decide whether a destructive operation runs are held
+      # higher than the codebase as a whole. CI enforces the same floors, so a
+      # missing Codecov plan does not mean the gate disappears.
+      safety:
+        target: 80%
+        threshold: 1%
+        paths:
+          - internal/policy
+          - internal/confirm
+          - internal/redact
+          - internal/shape
+          - internal/untrusted
+          - internal/whmcs
+    patch:
+      default:
+        target: 70%
+
+  ignore:
+    # Generated from the vendor documentation by cmd/docgen; it is data, not
+    # logic, and its correctness is checked by the registry tests instead.
+    - "internal/registry/actions_gen.go"
+    # Thin flag wiring; the logic it calls lives in internal/app and is tested.
+    - "cmd/toc-whmcs-mcp/main.go"
+    # Development-time scraper, covered by golden-file parser tests only.
+    - "cmd/docgen/main.go"
+
+comment:
+  layout: "reach, diff, flags, files"
+  require_changes: true

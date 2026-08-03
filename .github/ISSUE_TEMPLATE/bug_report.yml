@@ -1,0 +1,65 @@
+name: Bug report
+description: Something behaves differently from the specification
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not paste customer data, API credentials, or raw WHMCS responses.
+        Redact before you paste. If this is a security issue, close this and use
+        [Security Advisories](https://github.com/theorigamicorporation/toc-whmcs-mcp/security/advisories/new)
+        instead.
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What did the server do, and what should it have done?
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: The tool call and arguments, with values redacted.
+      render: shell
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Output of `toc-whmcs-mcp --version`.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: profile
+    attributes:
+      label: Active profile
+      options: [readonly, support, billing, admin]
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: configuration
+    attributes:
+      label: Configuration
+      options:
+        - label: WHMCS_MCP_ALLOW_DESTRUCTIVE was enabled
+        - label: A tool allowlist was configured
+
+  - type: textarea
+    id: audit
+    attributes:
+      label: Audit records
+      description: The relevant tool.start and tool.finish lines, with the operation ID. These carry field names and counts but no values, so they are safe to paste as-is.
+      render: json
+
+  - type: textarea
+    id: spec
+    attributes:
+      label: Which requirement does this contradict
+      description: If you know, name the requirement in openspec/specs/. If the behaviour is unspecified, say so; that is a finding too.

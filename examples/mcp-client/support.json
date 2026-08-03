@@ -1,0 +1,17 @@
+{
+  "//": "Support triage. Reads everything; changes tickets, client records and users.",
+  "//destructive": "Left false so the agent can draft and annotate but not send customer email. Set true only if it must reply, and each reply still needs a confirmation token.",
+  "mcpServers": {
+    "whmcs-support": {
+      "command": "/usr/local/bin/toc-whmcs-mcp",
+      "env": {
+        "WHMCS_MCP_WHMCS_URL": "https://billing.example.com",
+        "WHMCS_MCP_API_IDENTIFIER": "replace-me",
+        "WHMCS_MCP_API_SECRET": "replace-me",
+        "WHMCS_MCP_PROFILE": "support",
+        "WHMCS_MCP_ALLOW_DESTRUCTIVE": "false",
+        "WHMCS_MCP_DEFAULT_PAGE_SIZE": "15"
+      }
+    }
+  }
+}

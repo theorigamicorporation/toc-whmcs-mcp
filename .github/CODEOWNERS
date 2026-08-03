@@ -1,0 +1,21 @@
+# Default owner for everything.
+* @thereisnotime
+
+# The safety-critical surface. These decide whether a destructive operation can
+# reach the billing system, so they should never merge without a deliberate
+# review by an owner.
+/internal/registry/classification.go  @thereisnotime
+/internal/policy/                     @thereisnotime
+/internal/confirm/                    @thereisnotime
+/internal/redact/                     @thereisnotime
+/internal/untrusted/                  @thereisnotime
+/internal/tools/dispatch.go           @thereisnotime
+
+# Supply chain: the build pipeline produces the artifact that holds the WHMCS
+# credential in production.
+/.github/                             @thereisnotime
+/Dockerfile                           @thereisnotime
+/.goreleaser.yaml                     @thereisnotime
+
+# The specification of record.
+/openspec/specs/                      @thereisnotime

@@ -1,0 +1,56 @@
+# Single instance over the HTTP transport.
+#
+# Prefer stdio for a local MCP client; this is for a shared endpoint several
+# clients talk to. Terminate TLS in front of it: the server speaks plain HTTP.
+#
+#   docker compose --env-file env/http.env up -d
+
+services:
+  whmcs-mcp:
+    # Pinned by digest, not by tag. A moving tag means the image you tested is
+    # not necessarily the image you deployed. Take the digest from the release
+    # notes and verify its signature with cosign before trusting it.
+    image: ghcr.io/theorigamicorporation/toc-whmcs-mcp@sha256:REPLACE_WITH_DIGEST
+
+    restart: unless-stopped
+
+    env_file:
+      - env/http.env
+
+    ports:
+      # Bound to loopback. Put a reverse proxy in front for TLS and, if you need
+      # per-user attribution, for authentication that knows who the user is.
+      - "127.0.0.1:8080:8080"
+
+    # Calls WHMCS with the configured credential, so it reports unhealthy when
+    # the instance is unreachable or the credential is rejected, not merely when
+    # the process has died.
+    healthcheck:
+      test: ["CMD", "/toc-whmcs-mcp", "-healthcheck"]
+      interval: 60s
+      timeout: 15s
+      start_period: 10s
+      retries: 3
+
+    # The image is distroless and the binary is static: no shell, no package
+    # manager, nothing written to disk.
+    read_only: true
+    user: "65532:65532"
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+    # Audit records go to stderr, one JSON object per line. Ship them somewhere
+    # durable and alert on confirmation.rejected, which means a token was
+    # forged, replayed, or aimed at a different target.
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
+
+    deploy:
+      resources:
+        limits:
+          memory: 128M

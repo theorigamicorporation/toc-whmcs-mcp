@@ -1,0 +1,108 @@
+# Deployment for the HTTP transport.
+#
+# GitOps: apply this through your reconciler, never with a manual kubectl edit.
+# Always pass --context explicitly if you do run kubectl against it.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: toc-whmcs-mcp
+  labels:
+    app.kubernetes.io/name: toc-whmcs-mcp
+    app.kubernetes.io/component: mcp-server
+spec:
+  # One replica, deliberately.
+  #
+  # Confirmation tokens live in memory. A second replica would reject tokens
+  # issued by the first, so a destructive operation would fail confirmation
+  # roughly half the time. Scaling out needs a shared token store, which this
+  # version does not have.
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: toc-whmcs-mcp
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: toc-whmcs-mcp
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: server
+          # Pinned by digest. Take it from the release notes and verify the
+          # signature with cosign before deploying.
+          image: ghcr.io/theorigamicorporation/toc-whmcs-mcp@sha256:REPLACE_WITH_DIGEST
+          imagePullPolicy: IfNotPresent
+
+          env:
+            - name: WHMCS_MCP_WHMCS_URL
+              value: https://billing.example.com
+            - name: WHMCS_MCP_PROFILE
+              value: readonly
+            - name: WHMCS_MCP_ALLOW_DESTRUCTIVE
+              value: "false"
+            - name: WHMCS_MCP_TRANSPORT
+              value: http
+            - name: WHMCS_MCP_ADDR
+              value: 0.0.0.0:8080
+
+            # Credentials from a Secret, never from this manifest.
+            - name: WHMCS_MCP_API_IDENTIFIER
+              valueFrom:
+                secretKeyRef:
+                  name: toc-whmcs-mcp
+                  key: api-identifier
+            - name: WHMCS_MCP_API_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: toc-whmcs-mcp
+                  key: api-secret
+            - name: WHMCS_MCP_AUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: toc-whmcs-mcp
+                  key: auth-token
+
+          ports:
+            - name: http
+              containerPort: 8080
+
+          # Both probes actually call WHMCS, so a pod whose credential has been
+          # revoked is taken out of service rather than left serving errors.
+          # Liveness is slower and more forgiving: a WHMCS outage should not
+          # restart-loop this pod.
+          readinessProbe:
+            exec:
+              command: ["/toc-whmcs-mcp", "-healthcheck"]
+            initialDelaySeconds: 5
+            periodSeconds: 30
+            timeoutSeconds: 15
+            failureThreshold: 2
+          livenessProbe:
+            exec:
+              command: ["/toc-whmcs-mcp", "-healthcheck"]
+            initialDelaySeconds: 30
+            periodSeconds: 120
+            timeoutSeconds: 15
+            failureThreshold: 5
+
+          # The binary is static and writes nothing to disk.
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 128Mi

@@ -1,0 +1,67 @@
+# Keeps the README status badges current.
+#
+# The badges are SVG files committed under docs/badges/ and referenced by
+# relative path. shields.io dynamic badges and the gh-pages badge pattern both
+# need anonymous read access to this repository, which a private repo does not
+# give, so they would render as broken images for exactly the people allowed to
+# see them.
+name: Badges
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "openspec/**"
+      - "internal/registry/actions_gen.go"
+      - ".tool-versions"
+      - "scripts/gen-badges.sh"
+      - ".github/workflows/badges.yaml"
+  workflow_dispatch:
+
+permissions: read-all
+
+concurrency:
+  group: badges-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  regenerate:
+    name: Regenerate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: .tool-versions
+          cache: true
+
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "22"
+
+      - name: Install openspec
+        run: npm install -g @fission-ai/openspec@1.7.0
+
+      # Coverage is measured here so the badge reflects the committed code
+      # rather than whatever a developer last ran locally.
+      - name: Measure coverage
+        run: go test -coverpkg=./... -coverprofile=coverage.out -covermode=atomic ./... >/dev/null
+
+      - name: Regenerate badges
+        run: ./scripts/gen-badges.sh
+
+      - name: Commit if changed
+        run: |
+          if git diff --quiet -- docs/badges; then
+            echo "badges unchanged"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/badges
+          # docs: so release-please does not treat a badge refresh as a release.
+          git commit -m "docs: refresh status badges"
+          git push

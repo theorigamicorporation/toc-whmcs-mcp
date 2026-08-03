@@ -1,0 +1,49 @@
+# Egress restricted to WHMCS and DNS, ingress restricted to the namespaces that
+# should reach this server.
+#
+# This is the control that survives a bug in the server itself: even a fully
+# compromised process cannot reach anything but the billing host.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: toc-whmcs-mcp
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: toc-whmcs-mcp
+  policyTypes: [Ingress, Egress]
+
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              # Label the namespaces whose agents may use this instance.
+              toc.whmcs-mcp/access: "true"
+      ports:
+        - protocol: TCP
+          port: 8080
+
+  egress:
+    - to:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - to:
+        # Narrow this to the WHMCS host's address. 0.0.0.0/0 minus private
+        # ranges is a starting point, not a destination.
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+              - 169.254.0.0/16
+      ports:
+        - protocol: TCP
+          port: 443

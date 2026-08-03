@@ -1,0 +1,35 @@
+{
+  "//": "Three instances rather than one permissive one.",
+  "//why": "An agent connects to the instance matching its job. A compromise of the support agent cannot reach billing because that path does not exist in its process, not merely because a check would refuse it.",
+  "//credentials": "Each instance uses its own WHMCS API credential, scoped in WHMCS to what its profile needs, so the two controls reinforce each other.",
+  "mcpServers": {
+    "whmcs-readonly": {
+      "command": "/usr/local/bin/toc-whmcs-mcp",
+      "env": {
+        "WHMCS_MCP_WHMCS_URL": "https://billing.example.com",
+        "WHMCS_MCP_API_IDENTIFIER": "readonly-credential",
+        "WHMCS_MCP_API_SECRET": "replace-me",
+        "WHMCS_MCP_PROFILE": "readonly"
+      }
+    },
+    "whmcs-support": {
+      "command": "/usr/local/bin/toc-whmcs-mcp",
+      "env": {
+        "WHMCS_MCP_WHMCS_URL": "https://billing.example.com",
+        "WHMCS_MCP_API_IDENTIFIER": "support-credential",
+        "WHMCS_MCP_API_SECRET": "replace-me",
+        "WHMCS_MCP_PROFILE": "support"
+      }
+    },
+    "whmcs-billing": {
+      "command": "/usr/local/bin/toc-whmcs-mcp",
+      "env": {
+        "WHMCS_MCP_WHMCS_URL": "https://billing.example.com",
+        "WHMCS_MCP_API_IDENTIFIER": "billing-credential",
+        "WHMCS_MCP_API_SECRET": "replace-me",
+        "WHMCS_MCP_PROFILE": "billing",
+        "WHMCS_MCP_ALLOW_DESTRUCTIVE": "true"
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "//": "Read-only. The safest starting point: 15 tools, none of which can change anything.",
+  "//image": "Replace the digest from the release notes. Never use a moving tag.",
+  "mcpServers": {
+    "whmcs": {
+      "command": "/usr/local/bin/toc-whmcs-mcp",
+      "env": {
+        "WHMCS_MCP_WHMCS_URL": "https://billing.example.com",
+        "WHMCS_MCP_API_IDENTIFIER": "replace-me",
+        "WHMCS_MCP_API_SECRET": "replace-me",
+        "WHMCS_MCP_PROFILE": "readonly"
+      }
+    }
+  }
+}

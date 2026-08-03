@@ -1,0 +1,31 @@
+# Install with: pre-commit install --hook-type commit-msg
+#
+# Conventional commits are not a style preference here: release-please derives
+# the version bump and the changelog from them, so a wrong type ships a wrong
+# release note.
+repos:
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: 3db014c16a9d31997ab8c07a4d61fcce936c8f0d # v4.4.0
+    hooks:
+      - id: conventional-pre-commit
+        stages: [commit-msg]
+        args:
+          - feat
+          - fix
+          - sec
+          - docs
+          - style
+          - refactor
+          - perf
+          - test
+          - build
+          - ci
+          - chore
+          - revert
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: 83d9cd684c87d95d656c1458ef04895a7f1cbd8e # v8.30.1
+    hooks:
+      # A WHMCS API secret committed by accident is a production incident, and
+      # rewriting history does not un-leak it. Catch it before the commit.
+      - id: gitleaks

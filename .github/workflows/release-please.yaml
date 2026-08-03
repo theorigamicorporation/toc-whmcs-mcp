@@ -1,0 +1,61 @@
+# The normal release path.
+#
+# release-please reads the conventional commits since the last release, keeps a
+# release PR up to date with the version bump and CHANGELOG entry, and cuts the
+# release when that PR is merged. Nobody hand-edits a version number, and the
+# changelog is a consequence of the commit messages rather than a separate
+# thing to remember.
+name: Release Please
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# A job that calls a reusable workflow cannot request more than the caller
+# workflow itself grants, so the write scopes have to be declared here as the
+# ceiling. Each job below still narrows to only what it needs.
+permissions:
+  contents: write
+  pull-requests: write
+  packages: write
+  id-token: write
+  attestations: write
+
+concurrency:
+  group: release-please-${{ github.ref }}
+  # Do not cancel in progress: cancelling mid-release leaves a tag without
+  # artifacts.
+  cancel-in-progress: false
+
+jobs:
+  release-please:
+    name: Release Please
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - id: release
+        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  # release-please creates the tag with GITHUB_TOKEN, and GitHub suppresses
+  # workflow triggers from that token to prevent loops. So the tag push does not
+  # start release.yaml, and the artifacts have to be built from here.
+  artifacts:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created == 'true' }}
+    uses: ./.github/workflows/release-artifacts.yaml
+    with:
+      ref: ${{ needs.release-please.outputs.tag_name }}
+    permissions:
+      contents: write
+      packages: write
+      id-token: write
+      attestations: write
