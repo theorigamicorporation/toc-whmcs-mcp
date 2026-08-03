@@ -161,6 +161,23 @@ process, not merely because a check would refuse it.
 - [ ] HTTP transport authenticated and TLS-terminated, or stdio only
 - [ ] Someone knows that revoking the WHMCS credential is the kill switch
 
+## What the plan does not give us
+
+Three GitHub features the pipeline would otherwise use need either a public
+repository or a paid plan, and this repository is private on neither:
+
+| Feature | Status | What covers it instead |
+| --- | --- | --- |
+| Code scanning (SARIF upload) | unavailable | gosec, Trivy and govulncheck fail the build directly on a finding |
+| CodeQL | unavailable | manual-only workflow, kept for the day the plan allows it |
+| Artifact attestation | unavailable | cosign keyless signing, which is what you verify anyway |
+
+None of them is load-bearing. Each is wired `continue-on-error` or left
+manual, so it starts working with no workflow change if the plan changes.
+
+Signature verification is unaffected: cosign signs both the checksum file and
+the image, and neither depends on a GitHub feature.
+
 ## Upgrading
 
 Releases follow semver, driven by conventional commits. Read `CHANGELOG.md`
