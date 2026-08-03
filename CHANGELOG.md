@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.3](https://github.com/theorigamicorporation/toc-whmcs-mcp/compare/v0.1.2...v0.1.3) (2026-08-03)
+
+
+### Bug Fixes
+
+* **tools:** declare whmcs_call_action parameters as an object ([#22](https://github.com/theorigamicorporation/toc-whmcs-mcp/issues/22)) ([04198d1](https://github.com/theorigamicorporation/toc-whmcs-mcp/commit/04198d1f4923d789ac000299f0073280d5bf980e))
+
 ## [0.1.2](https://github.com/theorigamicorporation/toc-whmcs-mcp/compare/v0.1.1...v0.1.2) (2026-08-03)
 
 
