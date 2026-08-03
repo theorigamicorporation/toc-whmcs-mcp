@@ -1,8 +1,9 @@
 # Security Policy
 
-This server holds an API credential to The Origami Corporation's WHMCS billing
-system and mediates an LLM agent's access to customer data. Treat findings here
-as production security issues.
+This server holds an API credential to a WHMCS billing system and mediates an
+LLM agent's access to customer data. Anyone running it is running it against
+production billing infrastructure, so treat findings here as production security
+issues.
 
 ## Supported versions
 

@@ -1,6 +1,11 @@
 # Contributing to toc-whmcs-mcp
 
-Internal project. Access is on a need-to-know basis; see [LICENSE](LICENSE).
+Licensed under the [GNU AGPL v3.0](LICENSE). Contributions are accepted under
+the same licence.
+
+This started as an internal tool at The Origami Corporation and is maintained
+by them. Issues and pull requests are welcome; see [SECURITY.md](SECURITY.md)
+for anything security-related, which must not go in a public issue.
 
 Read [README.md](README.md) for the security model and
 [CLAUDE.md](CLAUDE.md) for the working rules before changing anything under

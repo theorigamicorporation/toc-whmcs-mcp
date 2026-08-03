@@ -180,7 +180,7 @@ func fetchAction(ctx context.Context, client *http.Client, e indexEntry) (regist
 	if err != nil {
 		return registry.Action{}, fmt.Errorf("%s: %w", e.Name, err)
 	}
-	page, err := parseAction(strings.NewReader(string(body)))
+	page, err := parseAction(e.Name, strings.NewReader(string(body)))
 	if err != nil {
 		return registry.Action{}, fmt.Errorf("%s: %w", e.Name, err)
 	}

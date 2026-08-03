@@ -92,7 +92,7 @@ type actionPage struct {
 // Tables are matched by the id of the h3 that introduces them rather than by
 // document order, so an extra table elsewhere on the page cannot be mistaken
 // for the parameter list.
-func parseAction(r io.Reader) (actionPage, error) {
+func parseAction(action string, r io.Reader) (actionPage, error) {
 	doc, err := html.Parse(r)
 	if err != nil {
 		return actionPage{}, fmt.Errorf("parse action html: %w", err)
@@ -121,9 +121,9 @@ func parseAction(r io.Reader) (actionPage, error) {
 			case "table":
 				switch section {
 				case "request-parameters":
-					page.Params = parseParamTable(n, true)
+					page.Params = parseParamTable(action, n, true)
 				case "response-parameters":
-					page.Response = parseParamTable(n, false)
+					page.Response = parseParamTable(action, n, false)
 				}
 				// Do not descend into a table; nested tables are not a thing
 				// on these pages and skipping avoids re-entering rows.
@@ -147,7 +147,7 @@ func parseAction(r io.Reader) (actionPage, error) {
 //
 // The synthetic "action" row is dropped: the client supplies it, and exposing
 // it would let a caller override the action after policy resolution.
-func parseParamTable(table *html.Node, withRequired bool) []registry.Param {
+func parseParamTable(action string, table *html.Node, withRequired bool) []registry.Param {
 	var out []registry.Param
 
 	for _, row := range findAll(table, "tr") {
@@ -164,7 +164,7 @@ func parseParamTable(table *html.Node, withRequired bool) []registry.Param {
 			Type: normaliseType(collapse(textOf(cells[1]))),
 		}
 		if len(cells) > 2 {
-			p.Description = collapse(textOf(cells[2]))
+			p.Description = describe(action, name, collapse(textOf(cells[2])))
 		}
 		if withRequired && len(cells) > 3 {
 			req := strings.ToLower(collapse(textOf(cells[3])))
@@ -174,6 +174,23 @@ func parseParamTable(table *html.Node, withRequired bool) []registry.Param {
 		out = append(out, p)
 	}
 	return out
+}
+
+// describe decides what description, if any, is emitted for a parameter.
+//
+// Short vendor text is a statement of fact and passes through. Anything longer
+// than registry.LongDescriptionThreshold is treated as authored prose that this
+// project has no licence to redistribute, so it is replaced with our own text
+// where we have written one, and dropped where we have not. See
+// internal/registry/descriptions.go for the reasoning.
+func describe(action, param, vendor string) string {
+	if len(vendor) <= registry.LongDescriptionThreshold {
+		return vendor
+	}
+	if ours, ok := registry.Description(action, param); ok {
+		return ours
+	}
+	return ""
 }
 
 // normaliseType maps the vendor's free-text type column onto the registry's

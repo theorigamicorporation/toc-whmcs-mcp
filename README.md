@@ -26,7 +26,7 @@
     <td>
       <a href="SECURITY.md"><img src="https://img.shields.io/badge/profile-readonly%20by%20default-3fb950?style=flat-square" alt="Read-only by default"></a><br>
       <a href="SECURITY.md"><img src="https://img.shields.io/badge/mutations-confirmation%20required-0a7bbb?style=flat-square" alt="Confirmation required"></a><br>
-      <a href="LICENSE"><img src="https://img.shields.io/badge/license-proprietary-f85149?style=flat-square" alt="Proprietary"></a>
+      <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-0a7bbb?style=flat-square" alt="AGPL-3.0"></a>
     </td>
   </tr>
 </table>
@@ -38,9 +38,9 @@ All 162 documented WHMCS actions are reachable. Only 15 to 25 tools are
 advertised, depending on the profile, so the tool listing stays small enough for
 real MCP clients and for useful tool selection.
 
-Proprietary and confidential. See [LICENSE](LICENSE). All dependencies are
-permissively licensed and impose no restriction on that; see
-[docs/licensing.md](docs/licensing.md).
+Licensed under the [GNU AGPL v3.0](LICENSE). If you run a modified version of
+this server and let others interact with it over a network, you must offer them
+its source. See [docs/licensing.md](docs/licensing.md).
 
 **[Documentation](docs/)** · [Security model](docs/security-model.md) ·
 [Profiles](docs/profiles.md) · [Tool reference](docs/tools.md) ·

@@ -4,6 +4,10 @@ MCP server exposing the WHMCS Admin API to LLM agents. Go 1.26, `just` as the
 task runner, specification in `openspec/`. Read `README.md` for the security
 model before changing anything in the safety layer.
 
+Licensed AGPL-3.0. Assume anything committed here is world-readable forever:
+no customer data, no credentials, no internal hostnames, not even in a test
+fixture.
+
 ## The governing rule
 
 Safety is enforced **inside this process**. Never delegate a control to the

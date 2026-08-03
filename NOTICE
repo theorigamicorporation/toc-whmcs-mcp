@@ -1,0 +1,47 @@
+toc-whmcs-mcp
+Copyright (C) 2026 The Origami Corporation
+
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU Affero General Public License as published by the Free
+Software Foundation, either version 3 of the License, or (at your option) any
+later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License along
+with this program. If not, see <https://www.gnu.org/licenses/>.
+
+---
+
+THIRD-PARTY SOFTWARE
+
+This program incorporates permissively licensed Go modules. Their copyright
+notices and licence texts are reproduced in THIRD_PARTY_LICENSES.md, as those
+licences require. See also docs/licensing.md.
+
+---
+
+TRADEMARKS AND VENDOR DOCUMENTATION
+
+WHMCS is a trademark of its respective owner. This project is not affiliated
+with, endorsed by, or sponsored by WHMCS.
+
+internal/registry/actions_gen.go describes the WHMCS Admin API and is generated
+from the vendor's published API documentation at https://developers.whmcs.com/,
+which is Copyright (c) WHMCS, all rights reserved. Action and parameter names,
+types and requiredness are facts about an interface and are not subject to
+copyright. Where the generated file carries descriptive text, the vendor's own
+documentation page, linked from each action, is authoritative.
+
+---
+
+OPERATIONAL NOTE
+
+This software mediates access to a WHMCS billing system, which processes
+personal data. Operators are responsible for their own obligations under the
+GDPR and other applicable data-protection law: scope API credentials to the
+minimum required, restrict access on a need-to-know basis, do not share
+credentials between environments, and revoke them when no longer needed.
+See docs/security-model.md and docs/profiles.md.

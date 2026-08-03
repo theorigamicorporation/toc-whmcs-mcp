@@ -33,7 +33,7 @@ ARG COMMIT=unknown
 LABEL org.opencontainers.image.title="toc-whmcs-mcp" \
       org.opencontainers.image.description="MCP server for the WHMCS Admin API" \
       org.opencontainers.image.vendor="The Origami Corporation" \
-      org.opencontainers.image.licenses="Proprietary" \
+      org.opencontainers.image.licenses="AGPL-3.0-or-later" \
       org.opencontainers.image.version="${VERSION}" \
       org.opencontainers.image.revision="${COMMIT}" \
       org.opencontainers.image.source="https://github.com/theorigamicorporation/toc-whmcs-mcp"
@@ -44,6 +44,7 @@ COPY --from=build /out/toc-whmcs-mcp /toc-whmcs-mcp
 # binary redistribution, and an image is one.
 COPY --from=build /src/THIRD_PARTY_LICENSES.md /LICENSES/THIRD_PARTY_LICENSES.md
 COPY --from=build /src/LICENSE /LICENSES/LICENSE
+COPY --from=build /src/NOTICE /LICENSES/NOTICE
 
 USER nonroot:nonroot
 

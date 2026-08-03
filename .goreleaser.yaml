@@ -26,6 +26,7 @@ archives:
     files:
       - README.md
       - LICENSE
+      - NOTICE
       # Required: MIT, BSD and Apache-2.0 all oblige the copyright notice to
       # travel with a binary redistribution.
       - THIRD_PARTY_LICENSES.md

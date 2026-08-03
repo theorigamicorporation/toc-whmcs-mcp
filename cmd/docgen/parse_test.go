@@ -67,7 +67,7 @@ func TestParseIndex(t *testing.T) {
 }
 
 func TestParseAction(t *testing.T) {
-	page, err := parseAction(open(t, "action-addclient.html"))
+	page, err := parseAction("AddClient", open(t, "action-addclient.html"))
 	if err != nil {
 		t.Fatalf("parseAction: %v", err)
 	}
@@ -136,7 +136,7 @@ func TestParseAction(t *testing.T) {
 }
 
 func TestParseActionDescriptionsAreNormalised(t *testing.T) {
-	page, err := parseAction(open(t, "action-addclient.html"))
+	page, err := parseAction("AddClient", open(t, "action-addclient.html"))
 	if err != nil {
 		t.Fatalf("parseAction: %v", err)
 	}
