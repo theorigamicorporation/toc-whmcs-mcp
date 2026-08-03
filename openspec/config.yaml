@@ -1,0 +1,30 @@
+schema: spec-driven
+
+context: |
+  Project: toc-whmcs-mcp — a Model Context Protocol server exposing the WHMCS
+  Admin API to LLM agents. Proprietary, internal to The Origami Corporation.
+
+  Tech stack: Go 1.26 (see .tool-versions), github.com/mark3labs/mcp-go for the
+  MCP server, standard library net/http for the WHMCS client. `just` is the task
+  runner. Tests are `go test` with httptest fakes — never a live WHMCS instance.
+
+  Domain: WHMCS is production billing infrastructure. Its API has ~169 actions
+  across 16 categories (Orders, Billing, Client, Domains, Support, Tickets,
+  Service, System, Users, ...). Actions are POSTed as form data to
+  /includes/api.php with an identifier/secret credential pair and
+  responsetype=json. Many actions are irreversible: DeleteClient, DeleteOrder,
+  ModuleTerminate, DomainRenew, AddInvoicePayment.
+
+  Governing principle: safety is enforced inside the server, never delegated to
+  the model or the MCP host. Assume the model may be prompt-injected by
+  customer-authored content (ticket bodies, client notes, order details) that
+  the server itself returns.
+
+  Conventions: no AI-boilerplate in commits or docs; concise, direct prose; no
+  em dashes in external-facing text.
+
+rules:
+  proposal:
+    - State the security posture explicitly; this is billing infrastructure.
+  design:
+    - Every decision must say what it prevents, not just what it does.

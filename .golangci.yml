@@ -1,0 +1,58 @@
+version: "2"
+
+run:
+  timeout: 5m
+
+linters:
+  enable:
+    - bodyclose      # a leaked response body is a leaked connection
+    - errcheck
+    - errorlint      # errors.Is/As over == and type assertions
+    - gosec
+    - govet
+    - ineffassign
+    - misspell
+    - nilerr         # returning nil after a non-nil error hides failures
+    - noctx          # every outbound request must carry a context
+    - revive
+    - staticcheck
+    - unconvert
+    - unparam
+    - unused
+
+  settings:
+    misspell:
+      # WHMCS field names are not ours to spell. income_alltime is the actual
+      # key the vendor returns.
+      ignore-rules:
+        - alltime
+    gosec:
+      excludes:
+        # G404: the only non-crypto randomness here is retry jitter, where a
+        # predictable value is harmless. Confirmation nonces and the signing
+        # key use crypto/rand.
+        - G404
+    revive:
+      rules:
+        - name: exported
+          disabled: false
+
+  exclusions:
+    rules:
+      # Generated: the registry is emitted by cmd/docgen and gofmt'd, not
+      # hand-written to lint standards.
+      - path: internal/registry/actions_gen\.go
+        linters:
+          - revive
+          - misspell
+          - unused
+      # Tests deliberately construct malformed input and ignore some errors.
+      - path: _test\.go
+        linters:
+          - errcheck
+          - gosec
+          - unparam
+
+formatters:
+  enable:
+    - gofmt

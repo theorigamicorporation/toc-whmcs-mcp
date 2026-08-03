@@ -1,0 +1,21 @@
+# build output
+/bin/
+/dist/
+*.exe
+
+# test output
+*.out
+coverage.html
+
+# local config — never commit WHMCS credentials
+.env
+.env.*
+!.env.example
+
+# editors
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store

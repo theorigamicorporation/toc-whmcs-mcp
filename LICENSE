@@ -1,0 +1,59 @@
+PROPRIETARY AND CONFIDENTIAL — ALL RIGHTS RESERVED
+
+Copyright (c) 2026 The Origami Corporation. All rights reserved.
+
+1. CONFIDENTIALITY
+   This repository and everything in it (source code, configuration, generated
+   API schemas, documentation, and any derived material) is the strictly
+   confidential and proprietary property of The Origami Corporation ("the
+   Company"). It is made available only to specifically authorized personnel of
+   the Company for the sole purpose of operating the Company's internal systems.
+   It must not be disclosed, shared, published, or made accessible to any third
+   party, in whole or in part, by any means.
+
+2. NO LICENSE GRANTED
+   No license, right, or interest of any kind is granted, whether express,
+   implied, by estoppel, or otherwise. You may not use, copy, reproduce,
+   modify, adapt, translate, distribute, sublicense, sell, lease, publicly
+   display, or create derivative works from any part of this repository except
+   with the prior written authorization of the Company.
+
+3. NO USE FOR MACHINE LEARNING / AI TRAINING
+   The contents of this repository MUST NOT be used, in whole or in part, to
+   train, fine-tune, pre-train, evaluate, benchmark, ground, retrieve-augment,
+   or otherwise develop or improve any machine learning model, large language
+   model, artificial intelligence system, embedding, index, or dataset, whether
+   by a human, an automated agent, a crawler, or any other process. This
+   prohibition applies regardless of where or how the contents are accessed or
+   stored.
+
+4. OPERATIONAL AND DATA-PROTECTION OBLIGATIONS
+   This software connects to the Company's WHMCS billing system, which processes
+   personal data of customers (including names, contact details, billing records,
+   and support correspondence) and holds credentials for production
+   infrastructure. Operators must handle it in accordance with the EU General
+   Data Protection Regulation (GDPR) and all other applicable data-protection
+   laws. Access is restricted on a strict need-to-know basis. API credentials
+   issued for use with this software must be scoped to the minimum WHMCS
+   permissions required, must not be shared between environments, and must be
+   revoked when no longer needed.
+
+5. THIRD-PARTY MATERIAL
+   WHMCS is a trademark of its respective owner. This repository is not
+   affiliated with, endorsed by, or sponsored by WHMCS. Generated API schemas
+   are derived from publicly published vendor documentation and remain subject to
+   that vendor's terms.
+
+6. NO WARRANTY
+   The contents are provided "AS IS", without warranty of any kind. To the
+   maximum extent permitted by law, the Company disclaims all liability arising
+   from any use of the contents, including any action taken against a production
+   billing system through this software.
+
+7. TERMINATION
+   Any authorization to access these contents may be revoked at any time.
+   On revocation, or on request by the Company, you must securely destroy all
+   copies in your possession or control.
+
+Unauthorized use, reproduction, disclosure, or use for model training is a
+breach of confidentiality and may violate applicable law.
