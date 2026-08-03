@@ -1,9 +1,35 @@
 # toc-whmcs-mcp
 
-[![CI](https://github.com/theorigamicorporation/toc-whmcs-mcp/actions/workflows/ci.yaml/badge.svg)](https://github.com/theorigamicorporation/toc-whmcs-mcp/actions/workflows/ci.yaml)
-[![Release](https://github.com/theorigamicorporation/toc-whmcs-mcp/actions/workflows/release-please.yaml/badge.svg)](https://github.com/theorigamicorporation/toc-whmcs-mcp/actions/workflows/release-please.yaml)
-[![Registry drift](https://github.com/theorigamicorporation/toc-whmcs-mcp/actions/workflows/registry-drift.yaml/badge.svg)](https://github.com/theorigamicorporation/toc-whmcs-mcp/actions/workflows/registry-drift.yaml)
-[![License: Proprietary](https://img.shields.io/badge/License-Proprietary-red.svg)](LICENSE)
+<table>
+  <tr>
+    <th align="left">Pipeline</th>
+    <th align="left">Code</th>
+    <th align="left">OpenSpec</th>
+    <th align="left">Security</th>
+  </tr>
+  <tr valign="top">
+    <td>
+      <a href="../../actions/workflows/ci.yaml"><img src="../../actions/workflows/ci.yaml/badge.svg" alt="CI"></a><br>
+      <a href="../../actions/workflows/release-please.yaml"><img src="../../actions/workflows/release-please.yaml/badge.svg" alt="Release"></a><br>
+      <a href="../../actions/workflows/registry-drift.yaml"><img src="../../actions/workflows/registry-drift.yaml/badge.svg" alt="Registry drift"></a>
+    </td>
+    <td>
+      <a href="docs/badges/coverage.svg"><img src="docs/badges/coverage.svg" alt="Coverage"></a><br>
+      <a href=".tool-versions"><img src="docs/badges/go.svg" alt="Go version"></a><br>
+      <a href="internal/registry/actions_gen.go"><img src="docs/badges/actions.svg" alt="WHMCS actions"></a>
+    </td>
+    <td>
+      <a href="openspec/specs/"><img src="docs/badges/specs.svg" alt="Specs"></a><br>
+      <a href="openspec/specs/"><img src="docs/badges/requirements.svg" alt="Requirements"></a><br>
+      <a href="openspec/changes/"><img src="docs/badges/open-changes.svg" alt="Open changes"></a>
+    </td>
+    <td>
+      <a href="SECURITY.md"><img src="https://img.shields.io/badge/profile-readonly%20by%20default-3fb950?style=flat-square" alt="Read-only by default"></a><br>
+      <a href="SECURITY.md"><img src="https://img.shields.io/badge/mutations-confirmation%20required-0a7bbb?style=flat-square" alt="Confirmation required"></a><br>
+      <a href="LICENSE"><img src="https://img.shields.io/badge/license-proprietary-f85149?style=flat-square" alt="Proprietary"></a>
+    </td>
+  </tr>
+</table>
 
 An MCP server that exposes the WHMCS Admin API to LLM agents, for support
 triage, billing lookups and provisioning work.
@@ -13,6 +39,11 @@ advertised, depending on the profile, so the tool listing stays small enough for
 real MCP clients and for useful tool selection.
 
 Proprietary and confidential. See [LICENSE](LICENSE).
+
+**[Documentation](docs/)** · [Security model](docs/security-model.md) ·
+[Profiles](docs/profiles.md) · [Tool reference](docs/tools.md) ·
+[Deployment](docs/deployment.md) · [Troubleshooting](docs/troubleshooting.md) ·
+[Examples](examples/)
 
 ---
 
@@ -152,60 +183,37 @@ call.
 | `WHMCS_MCP_CONFIRM_TTL` | `5m` | Confirmation token lifetime. |
 | `WHMCS_MCP_LOG_LEVEL` | `info` | `debug`, `info`, `warn`, `error`. |
 
-### Profile matrix
+### Profiles at a glance
 
 | | readonly | support | billing | admin |
-| --- | --- | --- | --- | --- |
+| --- | :---: | :---: | :---: | :---: |
 | Read anything | yes | yes | yes | yes |
-| Tickets, client records | no | yes | client records only | yes |
-| Invoices, quotes, orders | no | no | yes | yes |
-| Provisioning (suspend, terminate) | no | no | no | yes |
-| Tools advertised, destructive off | 15 | 19 | 16 | 20 |
-| Tools advertised, destructive on | 15 | 20 | 18 | 25 |
+| Tickets, client records | no | **yes** | client records only | yes |
+| Invoices, quotes, orders | no | no | **yes** | yes |
+| Provisioning (suspend, terminate) | no | no | no | **yes** |
+| Tools advertised | 15 | 19-20 | 16-18 | 20-25 |
 
 Destructive actions within a permitted category still require
-`ALLOW_DESTRUCTIVE=true` and a per-call confirmation token.
+`ALLOW_DESTRUCTIVE=true` and a per-call confirmation token. Full matrix, how to
+choose, and how to scope the WHMCS credential: **[docs/profiles.md](docs/profiles.md)**.
 
 ## Connecting a client
 
-Claude Code:
-
-```bash
-claude mcp add whmcs -- \
+```sh
+claude mcp add whmcs \
   -e WHMCS_MCP_WHMCS_URL=https://billing.example.com \
   -e WHMCS_MCP_API_IDENTIFIER=... \
   -e WHMCS_MCP_API_SECRET=... \
-  -e WHMCS_MCP_PROFILE=support \
-  /usr/local/bin/toc-whmcs-mcp
+  -e WHMCS_MCP_PROFILE=readonly \
+  -- /usr/local/bin/toc-whmcs-mcp
 ```
 
-Any client taking a JSON config:
+Ready-to-edit configuration for JSON-config clients, Docker, Compose,
+Kubernetes and systemd is in **[examples/](examples/)**. The reasoning behind
+each choice is in **[docs/deployment.md](docs/deployment.md)**.
 
-```json
-{
-  "mcpServers": {
-    "whmcs": {
-      "command": "/usr/local/bin/toc-whmcs-mcp",
-      "env": {
-        "WHMCS_MCP_WHMCS_URL": "https://billing.example.com",
-        "WHMCS_MCP_API_IDENTIFIER": "...",
-        "WHMCS_MCP_API_SECRET": "...",
-        "WHMCS_MCP_PROFILE": "readonly"
-      }
-    }
-  }
-}
-```
-
-Container, pinned by digest:
-
-```bash
-docker run --rm -i \
-  -e WHMCS_MCP_WHMCS_URL=https://billing.example.com \
-  -e WHMCS_MCP_API_IDENTIFIER=... \
-  -e WHMCS_MCP_API_SECRET=... \
-  ghcr.io/theorigamicorporation/toc-whmcs-mcp@sha256:...
-```
+Always reference the container image by digest, never a tag, and verify its
+cosign signature before trusting it.
 
 ## Tools
 
@@ -237,6 +245,9 @@ the exact set.
 
 **System**
 `whmcs_stats`
+
+Full reference with arguments and worked call sequences:
+**[docs/tools.md](docs/tools.md)**.
 
 Anything else goes through the escape hatch:
 
@@ -320,6 +331,8 @@ billing system.
   ```
 
 Report vulnerabilities privately: see [SECURITY.md](SECURITY.md).
+The full security model, including what an attacker would have to defeat, is in
+**[docs/security-model.md](docs/security-model.md)**.
 
 The specification lives in `openspec/`. Changes to behaviour should update it
 first:

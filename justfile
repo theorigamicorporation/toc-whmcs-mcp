@@ -65,6 +65,11 @@ gen:
 gen-check:
     go run ./cmd/docgen -check
 
+# regenerate the README status badges under docs/badges/
+[group('generate')]
+badges:
+    ./scripts/gen-badges.sh
+
 # ── build ────────────────────────────────────────────────────────────────────
 
 # build the server binary into bin/

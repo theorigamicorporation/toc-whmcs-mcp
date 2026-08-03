@@ -1,0 +1,60 @@
+# Three instances, one per profile, each with its own WHMCS credential.
+#
+# This is the shape worth copying. An agent connects to the instance matching
+# its job, and a compromise of the support agent cannot reach billing because
+# that path does not exist in its process.
+#
+#   docker compose -f docker-compose.multi-profile.yaml up -d
+
+x-common: &common
+  image: ghcr.io/theorigamicorporation/toc-whmcs-mcp@sha256:REPLACE_WITH_DIGEST
+  restart: unless-stopped
+  read_only: true
+  user: "65532:65532"
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  healthcheck:
+    test: ["CMD", "/toc-whmcs-mcp", "-healthcheck"]
+    interval: 60s
+    timeout: 15s
+    start_period: 10s
+    retries: 3
+  logging:
+    driver: json-file
+    options:
+      max-size: "20m"
+      max-file: "5"
+  deploy:
+    resources:
+      limits:
+        memory: 128M
+
+services:
+  readonly:
+    <<: *common
+    env_file: [env/readonly.env]
+    environment:
+      WHMCS_MCP_TRANSPORT: http
+      WHMCS_MCP_ADDR: 0.0.0.0:8080
+      # Each instance gets its own token, so revoking access to one does not
+      # disturb the others.
+      WHMCS_MCP_AUTH_TOKEN: ${READONLY_TOKEN:?set READONLY_TOKEN}
+    ports: ["127.0.0.1:8081:8080"]
+
+  support:
+    <<: *common
+    env_file: [env/support.env]
+    environment:
+      WHMCS_MCP_TRANSPORT: http
+      WHMCS_MCP_ADDR: 0.0.0.0:8080
+      WHMCS_MCP_AUTH_TOKEN: ${SUPPORT_TOKEN:?set SUPPORT_TOKEN}
+    ports: ["127.0.0.1:8082:8080"]
+
+  billing:
+    <<: *common
+    env_file: [env/billing.env]
+    environment:
+      WHMCS_MCP_TRANSPORT: http
+      WHMCS_MCP_ADDR: 0.0.0.0:8080
+      WHMCS_MCP_AUTH_TOKEN: ${BILLING_TOKEN:?set BILLING_TOKEN}
+    ports: ["127.0.0.1:8083:8080"]

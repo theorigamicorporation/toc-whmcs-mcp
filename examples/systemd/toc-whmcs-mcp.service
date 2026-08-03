@@ -1,0 +1,71 @@
+# Hardened unit for the HTTP transport.
+#
+#   sudo install -m 0644 toc-whmcs-mcp.service /etc/systemd/system/
+#   sudo install -d -m 0700 /etc/toc-whmcs-mcp
+#   sudo install -m 0600 ../env/http.env /etc/toc-whmcs-mcp/http.env
+#   sudo systemctl enable --now toc-whmcs-mcp
+#
+# The env file holds a WHMCS API credential. Mode 0600, root-owned; DynamicUser
+# below means the service account cannot read it directly, so it is loaded by
+# systemd before the process drops privileges.
+
+[Unit]
+Description=toc-whmcs-mcp (MCP server for the WHMCS Admin API)
+Documentation=https://github.com/theorigamicorporation/toc-whmcs-mcp
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=exec
+ExecStart=/usr/local/bin/toc-whmcs-mcp
+EnvironmentFile=/etc/toc-whmcs-mcp/http.env
+
+Restart=on-failure
+RestartSec=5s
+
+# Audit records go to stderr, one JSON object per line, and land in the journal.
+# Ship them somewhere durable and alert on confirmation.rejected.
+StandardOutput=journal
+StandardError=journal
+
+# --- hardening -------------------------------------------------------------
+# The binary is static, writes nothing to disk, and needs nothing but outbound
+# HTTPS. Everything below is therefore free.
+
+DynamicUser=yes
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+ProtectProc=invisible
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+RemoveIPC=yes
+CapabilityBoundingSet=
+AmbientCapabilities=
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+SystemCallArchitectures=native
+RestrictAddressFamilies=AF_INET AF_INET6
+
+# Adjust to the WHMCS host if you can express it as addresses. This is the
+# control that still holds if the server itself has a bug.
+IPAddressDeny=any
+IPAddressAllow=localhost
+# IPAddressAllow=203.0.113.10/32
+
+MemoryMax=128M
+TasksMax=64
+
+[Install]
+WantedBy=multi-user.target

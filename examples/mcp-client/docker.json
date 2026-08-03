@@ -1,0 +1,15 @@
+{
+  "//": "Same server, run from the signed container image instead of a local binary.",
+  "//stdin": "-i keeps stdin open, which the stdio transport needs. --rm avoids leaving stopped containers behind.",
+  "//digest": "Replace with the digest from the release notes, then verify it with cosign before trusting it.",
+  "mcpServers": {
+    "whmcs": {
+      "command": "docker",
+      "args": [
+        "run", "--rm", "-i",
+        "--env-file", "/etc/toc-whmcs-mcp/readonly.env",
+        "ghcr.io/theorigamicorporation/toc-whmcs-mcp@sha256:REPLACE_WITH_DIGEST"
+      ]
+    }
+  }
+}
