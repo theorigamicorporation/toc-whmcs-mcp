@@ -1,0 +1,31 @@
+version: 2
+updates:
+  - package-ecosystem: gomod
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    commit-message:
+      # Conventional commits drive the version bump and the changelog, so
+      # Dependabot has to speak the same convention.
+      prefix: build
+      prefix-development: build
+
+  # Actions are pinned to commit SHAs, which means they do not update
+  # themselves. Dependabot bumps the SHA and updates the version comment, so the
+  # pinning does not turn into permanently stale actions.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: ci
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: build

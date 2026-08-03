@@ -1,0 +1,141 @@
+# Reusable release job: builds, signs and publishes everything for one tag.
+#
+# It is called from two places, because a release can be cut two ways:
+#   - release-please.yaml, when a conventional-commit release lands on main
+#   - release.yaml, when someone pushes a tag by hand
+#
+# It lives in its own file rather than being copied into both, so the signing
+# and provenance steps cannot drift between the two paths.
+name: Release artifacts
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: "Tag or ref to build"
+        required: true
+        type: string
+
+permissions: read-all
+
+jobs:
+  binaries:
+    name: Binaries (goreleaser)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # upload release assets
+      id-token: write # keyless cosign signing and provenance
+      attestations: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ inputs.ref }}
+          # goreleaser needs full history to build its changelog.
+          fetch-depth: 0
+
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: .tool-versions
+          cache: true
+
+      # A release must not ship code that fails its own tests.
+      - name: Test
+        run: go test -race -shuffle=on ./...
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+
+      - name: Install syft (SBOM generation)
+        uses: anchore/sbom-action/download-syft@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
+        with:
+          syft-version: v1.42.3
+
+      - uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94 # v7
+        with:
+          version: v2.15.2
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Attesting the checksum file covers every artifact it lists, so one
+      # attestation proves the provenance of the whole release.
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4
+        with:
+          subject-path: dist/checksums.txt
+
+  image:
+    name: Image (GHCR)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ inputs.ref }}
+
+      - uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+
+      # Published under the version tag only. Deployments reference the digest
+      # reported below; a moving tag means the image you tested is not
+      # necessarily the image you deployed.
+      - name: Build and push
+        id: push
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          provenance: true
+          sbom: true
+          tags: ghcr.io/${{ github.repository }}:${{ inputs.ref }}
+          build-args: |
+            VERSION=${{ inputs.ref }}
+            COMMIT=${{ github.sha }}
+
+      - name: Sign the image
+        env:
+          DIGEST: ${{ steps.push.outputs.digest }}
+        run: cosign sign --yes "ghcr.io/${{ github.repository }}@${DIGEST}"
+
+      - name: Attest image provenance
+        uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4
+        with:
+          subject-name: ghcr.io/${{ github.repository }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
+
+      - name: Report the digest
+        env:
+          DIGEST: ${{ steps.push.outputs.digest }}
+        run: |
+          {
+            echo "### Image"
+            echo ""
+            echo "Reference this digest in deployments, not the tag:"
+            echo ""
+            echo '```'
+            echo "ghcr.io/${{ github.repository }}@${DIGEST}"
+            echo '```'
+            echo ""
+            echo "Verify the signature:"
+            echo ""
+            echo '```'
+            echo "cosign verify ghcr.io/${{ github.repository }}@${DIGEST} \\"
+            echo "  --certificate-identity-regexp='^https://github.com/${{ github.repository }}/' \\"
+            echo "  --certificate-oidc-issuer=https://token.actions.githubusercontent.com"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

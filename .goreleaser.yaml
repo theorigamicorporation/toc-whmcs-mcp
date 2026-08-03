@@ -1,0 +1,75 @@
+version: 2
+project_name: toc-whmcs-mcp
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - main: ./cmd/toc-whmcs-mcp
+    binary: toc-whmcs-mcp
+    env:
+      - CGO_ENABLED=0
+    goos: [linux, darwin]
+    goarch: [amd64, arm64]
+    flags:
+      # -trimpath keeps build-machine paths out of the binary, so two builds of
+      # the same commit produce the same bytes.
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X github.com/theorigamicorporation/toc-whmcs-mcp/internal/version.Version={{.Version}}
+      - -X github.com/theorigamicorporation/toc-whmcs-mcp/internal/version.Commit={{.Commit}}
+
+archives:
+  - formats: [tar.gz]
+    files:
+      - README.md
+      - LICENSE
+      - .env.example
+
+checksum:
+  name_template: "checksums.txt"
+
+# Keyless signing through Sigstore. The signature is verifiable against the
+# workflow identity that produced it, so a binary claiming to be a release can
+# be checked without anyone holding a private key.
+signs:
+  - cmd: cosign
+    args:
+      - sign-blob
+      - --bundle=${artifact}.bundle
+      - ${artifact}
+      - --yes
+    signature: ${artifact}.bundle
+    artifacts: checksum
+
+# An SBOM per archive: when the next dependency CVE lands, the question
+# "which releases shipped that version" is answerable from the release page.
+sboms:
+  - artifacts: archive
+
+changelog:
+  use: github
+  format: "{{.SHA}}: {{.Message}} (@{{.AuthorUsername}})"
+  sort: asc
+  filters:
+    exclude: ["^docs:", "^test:", "^ci:", "^chore:"]
+
+release:
+  # release-please creates the GitHub release first; this uploads artifacts to
+  # it. keep-existing avoids clobbering that release, and still creates one on a
+  # manually pushed tag, where none exists yet.
+  mode: keep-existing
+  footer: |
+    Container image, referenced by digest:
+
+    ```
+    ghcr.io/theorigamicorporation/toc-whmcs-mcp:{{ .Tag }}
+    ```
+
+    The server starts in the `readonly` profile. Destructive actions require
+    both a write-capable profile and `WHMCS_MCP_ALLOW_DESTRUCTIVE=true`, and
+    each such call still needs a confirmation token.
+
+    Full changelog: [CHANGELOG.md](https://github.com/theorigamicorporation/toc-whmcs-mcp/blob/main/CHANGELOG.md)

@@ -12,16 +12,17 @@ on:
     - cron: "17 6 * * 1"
   workflow_dispatch:
 
-permissions:
-  contents: read
-  issues: write
+permissions: read-all
 
 jobs:
   check:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-go@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
         with:
           go-version-file: .tool-versions
           cache: true
@@ -36,7 +37,7 @@ jobs:
 
       - name: open an issue when the registry is stale
         if: failure()
-        uses: actions/github-script@v8
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         with:
           script: |
             const title = 'WHMCS API registry is out of date'

@@ -171,6 +171,68 @@ func TestPermittedActionsShrinkWithProfile(t *testing.T) {
 	}
 }
 
+func TestIgnoredAllowlistEntriesAreReported(t *testing.T) {
+	// The allowlist can only subtract. An operator who lists a tool the profile
+	// does not grant should be told at startup, not left wondering where it
+	// went.
+	p := mustPolicy(t, policy.Config{
+		Profile:   policy.ProfileReadOnly,
+		Allowlist: []string{"whmcs_client_update", "whmcs_client_get"},
+	})
+
+	if !p.HasAllowlist() {
+		t.Fatal("HasAllowlist is false with an allowlist configured")
+	}
+	p.NoteIgnoredAllowlistEntry("whmcs_client_update")
+
+	ignored := p.IgnoredAllowlistEntries()
+	if len(ignored) != 1 || ignored[0] != "whmcs_client_update" {
+		t.Errorf("ignored entries = %v, want [whmcs_client_update]", ignored)
+	}
+}
+
+func TestNoAllowlistMeansEveryToolIsPermitted(t *testing.T) {
+	p := mustPolicy(t, policy.Config{Profile: policy.ProfileAdmin})
+	if p.HasAllowlist() {
+		t.Error("HasAllowlist is true with no allowlist configured")
+	}
+	if !p.AllowsTool("anything_at_all") {
+		t.Error("a tool was refused with no allowlist configured")
+	}
+}
+
+func TestAllowlistIgnoresBlankEntries(t *testing.T) {
+	// Configuration arrives as a comma-separated string, so empty and
+	// whitespace-only entries are routine. They must not become a tool name
+	// that matches nothing and silently empties the surface.
+	p := mustPolicy(t, policy.Config{
+		Profile:   policy.ProfileAdmin,
+		Allowlist: []string{"  whmcs_client_get  ", "", "   "},
+	})
+	if !p.AllowsTool("whmcs_client_get") {
+		t.Error("a padded allowlist entry was not trimmed")
+	}
+	if p.AllowsTool("") {
+		t.Error("a blank allowlist entry became a permitted tool")
+	}
+}
+
+func TestAccessorsReportConfiguration(t *testing.T) {
+	p := mustPolicy(t, policy.Config{Profile: policy.ProfileBilling, AllowDestructive: true})
+	if p.Profile() != policy.ProfileBilling {
+		t.Errorf("Profile() = %s, want billing", p.Profile())
+	}
+	if !p.DestructiveEnabled() {
+		t.Error("DestructiveEnabled() is false after explicit enablement")
+	}
+}
+
+func TestNewRejectsAnInvalidProfile(t *testing.T) {
+	if _, err := policy.New(policy.Config{Profile: policy.Profile("root")}); err == nil {
+		t.Fatal("policy.New accepted an invalid profile")
+	}
+}
+
 func TestDenialExplainsItself(t *testing.T) {
 	// A model told only "forbidden" retries with variations. One told why
 	// reports back to the operator, which is the outcome we want.

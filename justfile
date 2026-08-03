@@ -30,11 +30,21 @@ setup:
     go mod download
     @printf '\033[32m✓ dependencies ready\033[0m  \033[2m(go %s)\033[0m\n' "$(go env GOVERSION)"
 
-# install the dev tools used by `just lint`
+# install the dev tools CI uses, at the versions CI uses
 [group('setup')]
 setup-tools:
-    go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
-    @printf '\033[32m✓ golangci-lint installed\033[0m\n'
+    go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
+    go install github.com/securego/gosec/v2/cmd/gosec@v2.28.0
+    go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
+    go install golang.org/x/vuln/cmd/govulncheck@v1.1.4
+    @printf '\033[32m✓ dev tools installed\033[0m  \033[2mgolangci-lint, gosec, actionlint, govulncheck\033[0m\n'
+
+# install the commit-msg hook that enforces conventional commits
+[group('setup')]
+setup-hooks:
+    @command -v pre-commit >/dev/null || (printf '\033[31m✗ pre-commit not installed: https://pre-commit.com/#install\033[0m\n'; exit 1)
+    pre-commit install --hook-type commit-msg
+    @printf '\033[32m✓ commit-msg hook installed\033[0m  \033[2mconventional commits drive the version and changelog\033[0m\n'
 
 # write a .env you can edit, then `set -a; source .env; set +a`
 [group('setup')]
@@ -85,10 +95,37 @@ clean:
 test:
     go test ./...
 
-# run the suite with the race detector, as CI does
+# run the suite with the race detector and shuffled order, as CI does
 [group('test')]
 test-race:
-    go test -race ./...
+    go test -race -shuffle=on ./...
+
+# run the fuzz targets on the parsers that handle attacker-influenced input
+[group('test')]
+fuzz seconds="30":
+    go test -run=XXX -fuzz='FuzzWrap$' -fuzztime={{ seconds }}s ./internal/untrusted/
+    go test -run=XXX -fuzz='FuzzWrapIsIdempotent' -fuzztime={{ seconds }}s ./internal/untrusted/
+    go test -run=XXX -fuzz='FuzzValidate' -fuzztime={{ seconds }}s ./internal/registry/
+    go test -run=XXX -fuzz='FuzzResolveNeverPanics' -fuzztime={{ seconds }}s ./internal/registry/
+    @printf '\033[32m✓ fuzz targets clean\033[0m\n'
+
+# enforce the coverage floors CI enforces
+[group('test')]
+coverage-gate threshold="65" safety="80":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    go test -coverpkg=./... -coverprofile=coverage.out -covermode=atomic ./... >/dev/null
+    total=$(go tool cover -func=coverage.out | grep '^total:' | awk '{print $3}' | tr -d '%')
+    printf 'total %s%% (floor {{ threshold }}%%)\n' "$total"
+    fail=0
+    awk "BEGIN {exit !($total < {{ threshold }})}" && { printf '\033[31m✗ total below floor\033[0m\n'; fail=1; }
+    for pkg in policy confirm redact shape untrusted whmcs; do
+        pct=$(go test -cover ./internal/$pkg/... 2>/dev/null | grep -oE 'coverage: [0-9.]+%' | head -1 | grep -oE '[0-9.]+')
+        printf '  internal/%-10s %s%%\n' "$pkg" "$pct"
+        awk "BEGIN {exit !($pct < {{ safety }})}" && { printf '\033[31m  ✗ below safety floor of {{ safety }}%%\033[0m\n'; fail=1; }
+    done
+    [ "$fail" -eq 0 ] && printf '\033[32m✓ coverage floors met\033[0m\n'
+    exit $fail
 
 # run one package or one test:  just test-one ./internal/policy  or  just test-one ./... -run TestPolicy
 [group('test')]
@@ -121,13 +158,13 @@ lint: fmt-check vet
 # format all Go sources in place
 [group('quality')]
 fmt:
-    gofmt -w .
+    gofmt -s -w .
     @printf '\033[32m✓ formatted\033[0m\n'
 
 # fail if anything is unformatted
 [group('quality')]
 fmt-check:
-    @unformatted="$(gofmt -l .)"; \
+    @unformatted="$(gofmt -s -l .)"; \
     if [ -n "$unformatted" ]; then \
         printf '\033[31m✗ unformatted files:\033[0m\n%s\n' "$unformatted"; exit 1; \
     fi
@@ -145,12 +182,52 @@ tidy:
 # report known vulnerabilities in dependencies
 [group('quality')]
 audit:
-    go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+    go run golang.org/x/vuln/cmd/govulncheck@v1.1.4 ./...
+
+# static application security testing
+[group('quality')]
+sast:
+    @command -v gosec >/dev/null || (printf '\033[33m! gosec not installed, run `just setup-tools`\033[0m\n'; exit 1)
+    gosec -quiet ./...
+    @printf '\033[32m✓ no gosec findings\033[0m\n'
+
+# lint the GitHub Actions workflows
+[group('quality')]
+actionlint:
+    @command -v actionlint >/dev/null || (printf '\033[33m! actionlint not installed, run `just setup-tools`\033[0m\n'; exit 1)
+    actionlint
+    @printf '\033[32m✓ workflows clean\033[0m\n'
+
+# check that every GitHub Action is pinned to a commit SHA, not a tag
+[group('quality')]
+pin-check:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    unpinned=$(grep -rhoE '^\s*(- )?uses: [^ ]+' .github/workflows/ \
+        | grep -vE 'uses: \./' \
+        | grep -vE '@[0-9a-f]{40}' || true)
+    if [ -n "$unpinned" ]; then
+        printf '\033[31m✗ actions not pinned to a commit SHA:\033[0m\n%s\n' "$unpinned"
+        printf '  A tag is mutable. Pin it: gh api repos/OWNER/REPO/git/ref/tags/TAG --jq .object.sha\n'
+        exit 1
+    fi
+    printf '\033[32m✓ every action is SHA-pinned\033[0m\n'
 
 # everything CI runs, in one command
 [group('quality')]
-ci: fmt-check vet test-race
+ci: fmt-check vet tidy-check test-race coverage-gate actionlint pin-check
     @printf '\033[32m✓ ci checks passed\033[0m\n'
+
+# fail if go.mod or go.sum would change
+[group('quality')]
+tidy-check:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    cp go.mod go.mod.bak && cp go.sum go.sum.bak
+    trap 'mv go.mod.bak go.mod; mv go.sum.bak go.sum' EXIT
+    go mod tidy
+    diff -q go.mod go.mod.bak >/dev/null && diff -q go.sum go.sum.bak >/dev/null \
+        || { printf '\033[31m✗ go.mod/go.sum are not tidy, run `just tidy`\033[0m\n'; exit 1; }
 
 # ── run ──────────────────────────────────────────────────────────────────────
 
