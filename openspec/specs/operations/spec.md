@@ -20,6 +20,51 @@ maximum page size, confirmation TTL, and log level.
 - **WHEN** the server logs its effective configuration at startup
 - **THEN** credential values are masked
 
+### Requirement: Configuration from a file
+
+Configuration SHALL be readable from a file named by `--env-file` or
+`WHMCS_MCP_ENV_FILE`, holding `KEY=VALUE` lines. This exists so a credential
+need not be written into an MCP client's configuration, which clients store in
+plain text.
+
+Precedence SHALL be flags, then environment, then file, so the file supplies
+defaults that an explicit deployment setting is never silently overridden by.
+
+The file SHALL NOT be discovered automatically from the working directory. An
+MCP client chooses that directory, so automatic discovery would let an arbitrary
+directory supply credentials.
+
+File contents SHALL NOT be written into the process environment.
+
+#### Scenario: A file supplies configuration
+- **WHEN** the server starts with `--env-file` naming a readable file containing
+  the WHMCS URL and credentials, and none of those are set in the environment
+- **THEN** the server starts with those values
+
+#### Scenario: An explicit environment value wins over the file
+- **WHEN** a setting is present both in the environment and in the file
+- **THEN** the environment value is used
+
+#### Scenario: A file readable by other users is refused
+- **WHEN** the named file has any group or other permission bit set
+- **THEN** the server exits non-zero, naming the file and the mode, rather than
+  warning and continuing
+
+#### Scenario: A missing file is an error
+- **WHEN** `--env-file` names a file that does not exist
+- **THEN** the server exits non-zero rather than starting from whatever happens
+  to be in the environment
+
+#### Scenario: A malformed line is located
+- **WHEN** the file contains a line that is not a comment, blank, or an
+  assignment
+- **THEN** the server exits non-zero naming the file and the line number
+
+#### Scenario: Credentials do not enter the process environment
+- **WHEN** configuration is read from a file
+- **THEN** the values are not present in the process environment, so they cannot
+  be read from the process or inherited by a child
+
 ### Requirement: Two transports
 
 The server SHALL support stdio and Streamable HTTP, selected by configuration.
