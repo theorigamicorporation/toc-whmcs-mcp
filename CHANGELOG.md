@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.4](https://github.com/theorigamicorporation/toc-whmcs-mcp/compare/v0.1.3...v0.1.4) (2026-08-03)
+
+
+### Bug Fixes
+
+* **tools:** project ticket replies, stop wrapping identifiers, audit the surface ([#24](https://github.com/theorigamicorporation/toc-whmcs-mcp/issues/24)) ([95d070d](https://github.com/theorigamicorporation/toc-whmcs-mcp/commit/95d070d6952aee9dc4ee5b21809a30622b3161d2))
+
 ## [0.1.3](https://github.com/theorigamicorporation/toc-whmcs-mcp/compare/v0.1.2...v0.1.3) (2026-08-03)
 
 
