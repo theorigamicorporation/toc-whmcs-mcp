@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.2](https://github.com/theorigamicorporation/toc-whmcs-mcp/compare/v0.1.1...v0.1.2) (2026-08-03)
+
+
+### Features
+
+* **config:** read settings from an env file so credentials stay out of client config ([#19](https://github.com/theorigamicorporation/toc-whmcs-mcp/issues/19)) ([a954c84](https://github.com/theorigamicorporation/toc-whmcs-mcp/commit/a954c844b2db9c9c6d3ead0244ced0bbb870b442))
+
+
+### Bug Fixes
+
+* **docs:** resolve GOBIN when locating the installed binary ([#17](https://github.com/theorigamicorporation/toc-whmcs-mcp/issues/17)) ([c60ac19](https://github.com/theorigamicorporation/toc-whmcs-mcp/commit/c60ac19164376c56b65edbf38e382a85e663439f))
+
 ## [0.1.1](https://github.com/theorigamicorporation/toc-whmcs-mcp/compare/v0.1.0...v0.1.1) (2026-08-03)
 
 
