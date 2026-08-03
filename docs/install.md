@@ -8,8 +8,19 @@ No clone required. Pick one.
 go install github.com/theorigamicorporation/toc-whmcs-mcp/cmd/toc-whmcs-mcp@latest
 ```
 
-Lands in `$(go env GOPATH)/bin`. The binary reports its own version, because it
-reads the module version out of the build info the toolchain embeds.
+Lands in `$(go env GOBIN)` if that is set, otherwise `$(go env GOPATH)/bin`.
+Version managers such as asdf set `GOBIN`, so resolve it rather than assuming:
+
+```sh
+BIN="$(go env GOBIN)"; BIN="${BIN:-$(go env GOPATH)/bin}/toc-whmcs-mcp"
+```
+
+With asdf, `asdf reshim golang` afterwards puts `toc-whmcs-mcp` on your `PATH`
+directly.
+
+The binary reports its own version even though `go install` applies no linker
+flags, because it reads the module version out of the build info the toolchain
+embeds.
 
 **Prebuilt binary** (no Go needed; linux and darwin, amd64 and arm64):
 
@@ -46,6 +57,7 @@ else; the defaults are the safe ones.
 ```sh
 # 1. install
 go install github.com/theorigamicorporation/toc-whmcs-mcp/cmd/toc-whmcs-mcp@latest
+BIN="$(go env GOBIN)"; BIN="${BIN:-$(go env GOPATH)/bin}/toc-whmcs-mcp"
 
 # 2. configure. readonly is the default and cannot change anything.
 export WHMCS_MCP_WHMCS_URL=https://billing.example.com
@@ -54,10 +66,10 @@ export WHMCS_MCP_API_SECRET=...
 export WHMCS_MCP_PROFILE=readonly
 
 # 3. check it can reach WHMCS and authenticate, before wiring an agent to it
-"$(go env GOPATH)/bin/toc-whmcs-mcp" -healthcheck
+"$BIN" -healthcheck
 
 # 4. see exactly what this configuration would expose
-"$(go env GOPATH)/bin/toc-whmcs-mcp" -print-tools
+"$BIN" -print-tools
 ```
 
 Then register it with the client. Claude Code:
@@ -68,7 +80,7 @@ claude mcp add whmcs \
   -e WHMCS_MCP_API_IDENTIFIER="$WHMCS_MCP_API_IDENTIFIER" \
   -e WHMCS_MCP_API_SECRET="$WHMCS_MCP_API_SECRET" \
   -e WHMCS_MCP_PROFILE=readonly \
-  -- "$(go env GOPATH)/bin/toc-whmcs-mcp"
+  -- "$BIN"
 ```
 
 Three things worth knowing before you widen anything:

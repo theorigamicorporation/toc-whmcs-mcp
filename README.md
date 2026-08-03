@@ -66,7 +66,9 @@ are the safe ones.
 ```sh
 # 1. install (needs Go 1.26+; prebuilt binaries and the container image below)
 go install github.com/theorigamicorporation/toc-whmcs-mcp/cmd/toc-whmcs-mcp@latest
-BIN="$(go env GOPATH)/bin/toc-whmcs-mcp"
+# go install honours GOBIN when it is set, and ignores GOPATH/bin entirely.
+# Version managers such as asdf set GOBIN, so resolve it rather than assuming.
+BIN="$(go env GOBIN)"; BIN="${BIN:-$(go env GOPATH)/bin}/toc-whmcs-mcp"
 
 # 2. configure. readonly is the default and advertises nothing that can change data.
 export WHMCS_MCP_WHMCS_URL=https://billing.example.com
@@ -92,6 +94,9 @@ claude mcp add whmcs \
 If `-healthcheck` reports `Invalid IP`, the credential is fine and the machine's
 IP is not on the WHMCS API allowlist: **System Settings > General Settings >
 Security**.
+
+Using asdf? Run `asdf reshim golang` after installing, and the binary is on your
+`PATH` as `toc-whmcs-mcp` with no `$BIN` needed.
 
 No Go toolchain? A prebuilt binary for linux or darwin, amd64 or arm64:
 
