@@ -596,7 +596,11 @@ func ticketTools() []Tool {
 			Out: shape.Spec{
 				Title: "TicketDetail",
 				Fields: append(ticketSummary.Fields,
-					shape.Field{Name: "replies", Type: "array", Kind: shape.Untrusted, Origin: "ticket_replies", Desc: "The ticket conversation."},
+					// Declared plain and built by ticketDetailExtract, which
+					// projects each reply and wraps only its message. Declaring
+					// the array itself untrusted would stringify the whole
+					// structure through fmt %v.
+					shape.Field{Name: "replies", Type: "array", Desc: "The ticket conversation, each message in an untrusted-data envelope."},
 				),
 			},
 			Params: func(args Args, _ Limits) (map[string]any, error) {
@@ -615,7 +619,7 @@ func ticketTools() []Tool {
 				}
 				return p, nil
 			},
-			Extract: adapt(objectExtract("")),
+			Extract: adapt(ticketDetailExtract),
 		},
 		{
 			Name:   "whmcs_ticket_reply",
@@ -872,6 +876,45 @@ func systemTools() []Tool {
 			Extract: adapt(objectExtract("")),
 		},
 	}
+}
+
+// replySpec is the projection for one entry in a ticket conversation. The
+// message is the only customer-authored part, so it is the only part wrapped.
+var replySpec = shape.Spec{
+	Title: "TicketReply",
+	Fields: []shape.Field{
+		{Name: "date", Desc: "When the reply was posted."},
+		{Name: "name", Desc: "Who posted it."},
+		{Name: "email", Desc: "Their email address."},
+		{Name: "admin", Desc: "The staff member, when a reply came from staff."},
+		{Name: "message", Kind: shape.Untrusted, Origin: "ticket_reply", Desc: "The reply text."},
+	},
+}
+
+// ticketDetailExtract projects a ticket and its conversation.
+//
+// Replies need their own projection rather than being wrapped wholesale: an
+// untrusted envelope holds text, and a slice of reply objects run through it
+// arrives as Go's map[...] debug syntax, which buries the message an operator
+// is trying to read.
+func ticketDetailExtract(in ExtractIn) any {
+	out := in.Out.Project(in.Data, in.Opts)
+
+	replies := collection(in.Data, "replies", "reply")
+	projected := make([]map[string]any, 0, len(replies))
+	for _, raw := range replies {
+		m, ok := raw.(map[string]any)
+		if !ok {
+			continue
+		}
+		projected = append(projected, replySpec.Project(m, in.Opts))
+	}
+	if len(projected) > 0 {
+		out["replies"] = projected
+	} else {
+		delete(out, "replies")
+	}
+	return out
 }
 
 // --- argument helpers ------------------------------------------------------
