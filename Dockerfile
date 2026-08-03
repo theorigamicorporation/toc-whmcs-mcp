@@ -40,6 +40,11 @@ LABEL org.opencontainers.image.title="toc-whmcs-mcp" \
 
 COPY --from=build /out/toc-whmcs-mcp /toc-whmcs-mcp
 
+# MIT, BSD and Apache-2.0 all require the copyright notice to travel with a
+# binary redistribution, and an image is one.
+COPY --from=build /src/THIRD_PARTY_LICENSES.md /LICENSES/THIRD_PARTY_LICENSES.md
+COPY --from=build /src/LICENSE /LICENSES/LICENSE
+
 USER nonroot:nonroot
 
 # A real check: it calls WHMCS with the configured credential and fails if the

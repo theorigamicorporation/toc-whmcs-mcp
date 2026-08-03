@@ -38,12 +38,14 @@ All 162 documented WHMCS actions are reachable. Only 15 to 25 tools are
 advertised, depending on the profile, so the tool listing stays small enough for
 real MCP clients and for useful tool selection.
 
-Proprietary and confidential. See [LICENSE](LICENSE).
+Proprietary and confidential. See [LICENSE](LICENSE). All dependencies are
+permissively licensed and impose no restriction on that; see
+[docs/licensing.md](docs/licensing.md).
 
 **[Documentation](docs/)** · [Security model](docs/security-model.md) ·
 [Profiles](docs/profiles.md) · [Tool reference](docs/tools.md) ·
 [Deployment](docs/deployment.md) · [Troubleshooting](docs/troubleshooting.md) ·
-[Examples](examples/)
+[Licensing](docs/licensing.md) · [Examples](examples/)
 
 ---
 

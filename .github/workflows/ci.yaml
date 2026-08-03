@@ -123,6 +123,12 @@ jobs:
         with:
           version: v2.12.2
 
+      # A copyleft dependency would impose source-disclosure obligations that
+      # conflict with shipping this closed. Catching it when the dependency is
+      # added is much cheaper than catching it in a legal review.
+      - name: Check dependency licences
+        run: ./scripts/gen-licenses.sh --check
+
       - name: Lint workflows
         run: |
           go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.12

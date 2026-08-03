@@ -70,6 +70,11 @@ gen-check:
 badges:
     ./scripts/gen-badges.sh
 
+# regenerate THIRD_PARTY_LICENSES.md and fail on a non-permissive dependency
+[group('generate')]
+licenses:
+    ./scripts/gen-licenses.sh
+
 # ── build ────────────────────────────────────────────────────────────────────
 
 # build the server binary into bin/
@@ -203,6 +208,11 @@ actionlint:
     actionlint
     @printf '\033[32m✓ workflows clean\033[0m\n'
 
+# fail if a dependency is copyleft, or if THIRD_PARTY_LICENSES.md is stale
+[group('quality')]
+licenses-check:
+    ./scripts/gen-licenses.sh --check
+
 # check that every GitHub Action is pinned to a commit SHA, not a tag
 [group('quality')]
 pin-check:
@@ -220,7 +230,7 @@ pin-check:
 
 # everything CI runs, in one command
 [group('quality')]
-ci: fmt-check vet tidy-check test-race coverage-gate actionlint pin-check
+ci: fmt-check vet tidy-check test-race coverage-gate actionlint pin-check licenses-check
     @printf '\033[32m✓ ci checks passed\033[0m\n'
 
 # fail if go.mod or go.sum would change

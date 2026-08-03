@@ -8,6 +8,7 @@
 | [Deployment](deployment.md) | MCP clients, containers, Kubernetes, systemd, the HTTP transport |
 | [Troubleshooting](troubleshooting.md) | Error codes, what each one means, and what to do about it |
 | [Action registry](registry.md) | Regenerating from vendor docs, and how to classify a new action |
+| [Licensing](licensing.md) | Dependency licences, the notice obligation, and the vendor-documentation question |
 
 Installation, configuration reference and the profile summary are in the
 [main README](../README.md). Ready-to-use configuration lives in
