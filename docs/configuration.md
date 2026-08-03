@@ -44,6 +44,52 @@ Destructive actions within a permitted category still require
 `ALLOW_DESTRUCTIVE=true` and a per-call confirmation token. Full matrix, how to
 choose, and how to scope the WHMCS credential: **[docs/profiles.md](profiles.md)**.
 
+## Keeping the credential out of client config
+
+An MCP client stores its `env` block in plain text: Claude Code writes it into
+`~/.claude.json`. That puts a WHMCS API secret at rest in a second place, easy
+to forget when rotating and impossible to commit safely.
+
+`-env-file` avoids that. The client config carries a path; the secret stays in
+one file.
+
+```sh
+install -d -m 0700 ~/.config/toc-whmcs-mcp
+install -m 0600 /dev/null ~/.config/toc-whmcs-mcp/env
+$EDITOR ~/.config/toc-whmcs-mcp/env
+```
+
+```sh
+WHMCS_MCP_WHMCS_URL=https://billing.example.com
+WHMCS_MCP_API_IDENTIFIER=...
+WHMCS_MCP_API_SECRET=...
+WHMCS_MCP_PROFILE=readonly
+```
+
+Then register the server with no credentials in the client config at all:
+
+```sh
+claude mcp add whmcs -- toc-whmcs-mcp -env-file "$HOME/.config/toc-whmcs-mcp/env"
+```
+
+Or set `WHMCS_MCP_ENV_FILE` instead of passing the flag.
+
+Details worth knowing:
+
+- **The file must not be readable by other users.** Anything with group or
+  other permission bits is refused with the `chmod` command to fix it. A
+  warning would be printed to a stderr nobody reads.
+- **Values already in the environment win.** The file supplies defaults, so a
+  systemd unit or container that sets something explicitly is never silently
+  overridden by a stale file. Flags still beat both.
+- **There is no automatic `.env` discovery.** The MCP client chooses the working
+  directory, so auto-loading would let whatever directory it started in supply
+  credentials to a server that talks to a billing system. The path is always
+  explicit.
+- `export KEY=value`, `#` comments, blank lines and quoted values are all
+  tolerated. A line that is not an assignment is an error naming its line
+  number, rather than being skipped.
+
 ## Choosing a profile
 
 See [profiles.md](profiles.md) for the full permission matrix, how to pick one,
