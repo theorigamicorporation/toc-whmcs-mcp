@@ -144,12 +144,17 @@ jobs:
       - name: Install gosec
         run: go install github.com/securego/gosec/v2/cmd/gosec@v2.28.0
 
-      # Findings land in the Security tab rather than only in a log, so they
-      # are tracked and triaged rather than scrolled past.
+      # The scan result is the gate: findings fail the job. The SARIF upload
+      # below is a bonus, not the control, because code scanning needs GitHub
+      # Advanced Security and this repository is private without it.
       - name: Run gosec
-        run: gosec -no-fail -fmt sarif -out gosec.sarif ./...
+        run: gosec -fmt sarif -out gosec.sarif ./...
 
       - name: Upload SARIF
+        # Best effort: fails with "Resource not accessible by integration"
+        # until Advanced Security is enabled. Leaving it in means the Security
+        # tab starts working the day it is, with no workflow change.
+        continue-on-error: true
         uses: github/codeql-action/upload-sarif@d1ba80a13dd99fba24a470575428917156a28b43 # v4
         with:
           sarif_file: gosec.sarif
@@ -176,7 +181,19 @@ jobs:
       - name: Run govulncheck
         run: govulncheck ./...
 
+      # Two passes: one that fails the build on a finding, one that produces
+      # SARIF for the Security tab. The SARIF format has no exit code, so it
+      # cannot be the gate on its own.
       - name: Run Trivy (filesystem scan)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: table
+          severity: CRITICAL,HIGH
+          exit-code: "1"
+
+      - name: Trivy SARIF report
         if: always()
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
@@ -187,6 +204,8 @@ jobs:
           severity: CRITICAL,HIGH
 
       - name: Upload Trivy SARIF
+        # Best effort, as above: needs Advanced Security on a private repo.
+        continue-on-error: true
         if: always()
         uses: github/codeql-action/upload-sarif@d1ba80a13dd99fba24a470575428917156a28b43 # v4
         with:

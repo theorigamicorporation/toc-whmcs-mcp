@@ -12,7 +12,14 @@ on:
         required: true
         type: string
 
-permissions: read-all
+# A job that calls a reusable workflow cannot request more than the caller
+# workflow itself grants, so the write scopes have to be declared here as the
+# ceiling. Each job below still narrows to only what it needs.
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+  attestations: write
 
 jobs:
   artifacts:

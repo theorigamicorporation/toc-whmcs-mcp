@@ -1,7 +1,6 @@
 # toc-whmcs-mcp
 
 [![CI](https://github.com/theorigamicorporation/toc-whmcs-mcp/actions/workflows/ci.yaml/badge.svg)](https://github.com/theorigamicorporation/toc-whmcs-mcp/actions/workflows/ci.yaml)
-[![CodeQL](https://github.com/theorigamicorporation/toc-whmcs-mcp/actions/workflows/codeql.yaml/badge.svg)](https://github.com/theorigamicorporation/toc-whmcs-mcp/actions/workflows/codeql.yaml)
 [![Release](https://github.com/theorigamicorporation/toc-whmcs-mcp/actions/workflows/release-please.yaml/badge.svg)](https://github.com/theorigamicorporation/toc-whmcs-mcp/actions/workflows/release-please.yaml)
 [![Registry drift](https://github.com/theorigamicorporation/toc-whmcs-mcp/actions/workflows/registry-drift.yaml/badge.svg)](https://github.com/theorigamicorporation/toc-whmcs-mcp/actions/workflows/registry-drift.yaml)
 [![License: Proprietary](https://img.shields.io/badge/License-Proprietary-red.svg)](LICENSE)
@@ -304,9 +303,13 @@ billing system.
 - Workflows default to `permissions: read-all`, with each job requesting only
   what it needs.
 - The container base image is pinned by digest.
-- CI runs gosec (SAST), govulncheck and Trivy (SCA), and CodeQL, with findings
-  going to the Security tab rather than only a log. The built image is scanned,
-  not just the source tree.
+- CI runs gosec (SAST), govulncheck and Trivy (SCA). A finding fails the build:
+  the scanner's exit code is the gate, not the report. The built image is
+  scanned, not just the source tree it came from.
+- SARIF upload to the Security tab, and the CodeQL workflow, need GitHub
+  Advanced Security. This repository is private and does not have it, so the
+  uploads are best-effort (`continue-on-error`) and CodeQL is manual-only. They
+  start working with no workflow change the day Advanced Security is enabled.
 - Releases are signed with cosign keyless signing, ship an SBOM per archive, and
   carry build provenance attestation. Verify an image with:
 
