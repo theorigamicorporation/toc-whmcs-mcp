@@ -77,5 +77,5 @@
 ## 9. Handover
 
 - [x] 9.1 Verify the full suite passes offline
-- [ ] 9.2 Create the private repository and push
+- [x] 9.2 Create the private repository and push
 - [ ] 9.3 Archive this change with `openspec archive`
