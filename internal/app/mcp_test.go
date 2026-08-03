@@ -256,6 +256,87 @@ func TestNoSensitiveResourcesOrPrompts(t *testing.T) {
 
 // --- policy ----------------------------------------------------------------
 
+func TestEscapeHatchParametersAreDeclaredAsAnObject(t *testing.T) {
+	// The escape hatch is what makes 147 actions reachable without advertising
+	// 162 tools. It was published with `parameters` typed as a string, because
+	// Arg.option() had no object case and fell through to WithString, so every
+	// client sent a string and every call was rejected. The tool was unusable
+	// through MCP for its entire existence.
+	//
+	// The existing tests missed it by passing a Go map straight into
+	// CallToolRequest, skipping the JSON schema a real client reads. This
+	// asserts the published schema instead.
+	h := newHarness(t, func(c *config.Config) { c.Profile = policy.ProfileAdmin })
+
+	var hatch *mcp.Tool
+	for _, tool := range h.listTools(t) {
+		if tool.Name == "whmcs_call_action" {
+			hatch = &tool
+			break
+		}
+	}
+	if hatch == nil {
+		t.Fatal("whmcs_call_action is not advertised")
+	}
+
+	schema := hatch.InputSchema
+	raw, err := json.Marshal(schema)
+	if err != nil {
+		t.Fatalf("marshal input schema: %v", err)
+	}
+	var decoded struct {
+		Properties map[string]struct {
+			Type string `json:"type"`
+		} `json:"properties"`
+	}
+	if err := json.Unmarshal(raw, &decoded); err != nil {
+		t.Fatalf("decode input schema: %v", err)
+	}
+	if got := decoded.Properties["parameters"].Type; got != "object" {
+		t.Errorf("parameters is published as %q, want object; a client will send the wrong type", got)
+	}
+}
+
+func TestEscapeHatchAcceptsParametersAsObjectAndAsJSONString(t *testing.T) {
+	// Clients differ in how they serialise an object argument. Both shapes must
+	// reach WHMCS rather than one of them being a dead end.
+	for name, params := range map[string]any{
+		"object":      map[string]any{"invoiceid": 42},
+		"json string": `{"invoiceid": 42}`,
+	} {
+		t.Run(name, func(t *testing.T) {
+			h := newHarness(t, nil) // readonly; GetInvoice is a read
+			h.fake.Always(whmcstest.Success(`"invoiceid":42,"status":"Paid"`))
+
+			res := h.call(t, "whmcs_call_action", map[string]any{
+				"action":     "GetInvoice",
+				"parameters": params,
+			})
+			if res.IsError {
+				t.Fatalf("call rejected: %+v", res.StructuredContent)
+			}
+			if h.fake.CallCount("GetInvoice") != 1 {
+				t.Error("the call never reached WHMCS")
+			}
+			reqs := h.fake.Requests()
+			if got := reqs[len(reqs)-1].Get("invoiceid"); got != "42" {
+				t.Errorf("invoiceid sent as %q, want 42", got)
+			}
+		})
+	}
+}
+
+func TestEscapeHatchRejectsAStringThatIsNotJSON(t *testing.T) {
+	h := newHarness(t, nil)
+	res := h.call(t, "whmcs_call_action", map[string]any{
+		"action":     "GetInvoice",
+		"parameters": "invoiceid=42",
+	})
+	if got := errCode(t, res); got != "invalid_params" {
+		t.Fatalf("code = %s, want invalid_params", got)
+	}
+}
+
 func TestEscapeHatchIsNotAPolicyBypass(t *testing.T) {
 	// The one test that matters most for the escape hatch: it must be subject
 	// to exactly the same policy as a purpose-built tool.
