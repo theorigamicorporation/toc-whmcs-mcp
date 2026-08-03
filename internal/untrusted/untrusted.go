@@ -63,19 +63,12 @@ func Wrap(origin, content string) Envelope {
 // escapes, zero-width characters, and lines that imitate a message boundary can
 // make customer content look like part of the surrounding conversation.
 func sanitise(s string) (string, bool) {
+	// Filtering and replacement happen before truncation, because some
+	// replacements are longer than what they replace. Truncating first let a
+	// 16 KiB input of "<|" grow past the cap during replacement, which a fuzz
+	// run found: the bound has to be enforced on what is actually returned.
 	var b strings.Builder
 	b.Grow(len(s))
-
-	truncated := false
-	if len(s) > MaxContentLen {
-		// Cut on a rune boundary.
-		cut := MaxContentLen
-		for cut > 0 && !isRuneStart(s[cut]) {
-			cut--
-		}
-		s = s[:cut]
-		truncated = true
-	}
 
 	for _, r := range s {
 		switch {
@@ -94,17 +87,34 @@ func sanitise(s string) (string, bool) {
 		}
 	}
 
-	out := b.String()
 	// Defuse imitation message and role boundaries. The content is still
 	// legible to a human reading it, which is the point: it must be reportable
 	// without being executable.
-	out = boundaryReplacer.Replace(out)
+	out := boundaryReplacer.Replace(b.String())
+
+	truncated := false
+	if len(out) > MaxContentLen {
+		// Cut on a rune boundary, so truncation cannot produce invalid UTF-8.
+		cut := MaxContentLen
+		for cut > 0 && !isRuneStart(out[cut]) {
+			cut--
+		}
+		out = out[:cut]
+		truncated = true
+	}
 	return out, truncated
 }
 
 // boundaryReplacer breaks strings that clients and models treat as structural.
 // A zero-width space is not used as the separator, since those are stripped
 // above; a visible marker is honest about the fact that the text was altered.
+//
+// Every rule must be idempotent: its output must not match its own input.
+// Content can pass through the sanitiser more than once, and a rule that
+// rewrites its own output would keep growing the text on each pass. There is
+// deliberately no rule for the "_untrusted" marker itself: content is a JSON
+// string value and cannot forge a sibling key, so escaping it would buy nothing
+// and "_untrusted_" still contains "_untrusted".
 var boundaryReplacer = strings.NewReplacer(
 	"<|", "<│",
 	"|>", "│>",
@@ -114,7 +124,6 @@ var boundaryReplacer = strings.NewReplacer(
 	"\n\nSystem:", "\n\n[System]:",
 	"<system>", "[system]",
 	"</system>", "[/system]",
-	"_untrusted", "_untrusted_",
 )
 
 func isRuneStart(b byte) bool { return b&0xC0 != 0x80 }

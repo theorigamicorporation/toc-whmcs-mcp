@@ -301,11 +301,34 @@ func statusError(code int) error {
 
 // backoff returns the delay before the given attempt, with jitter so that
 // several concurrent tool calls do not retry in lockstep.
+//
+// The exponent is clamped before the shift rather than after. Shifting by a
+// value derived from an unclamped argument is how a small change to the retry
+// loop turns into an absurd delay or a wrapped-around zero, and the delay here
+// governs how long a billing call is held open.
 func backoff(attempt int) time.Duration {
-	base := time.Duration(1<<uint(attempt-1)) * 250 * time.Millisecond
-	if base > 4*time.Second {
-		base = 4 * time.Second
+	const (
+		unit        = 250 * time.Millisecond
+		maxExponent = 4 // 250ms * 2^4 = 4s, the cap below
+		maxBackoff  = 4 * time.Second
+	)
+
+	exponent := attempt - 1
+	if exponent < 0 {
+		exponent = 0
 	}
+	if exponent > maxExponent {
+		exponent = maxExponent
+	}
+
+	base := time.Duration(1<<exponent) * unit
+	if base > maxBackoff {
+		base = maxBackoff
+	}
+
+	// #nosec G404 -- jitter only. A predictable retry delay is harmless: this
+	// exists to desynchronise concurrent retries, not to be unguessable.
+	// Confirmation nonces and their signing key use crypto/rand.
 	return base + time.Duration(rand.Int64N(int64(base/2)+1))
 }
 
