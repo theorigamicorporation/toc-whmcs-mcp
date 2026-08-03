@@ -281,6 +281,46 @@ func TestAuthFailureIsNotRetried(t *testing.T) {
 	}
 }
 
+func TestWHMCSReasonSurvivesA4xx(t *testing.T) {
+	// WHMCS explains itself in the body even on a 403. An IP missing from the
+	// API allowlist looks exactly like a wrong secret unless that body is
+	// reported, and the two have completely different fixes.
+	f := whmcstest.New(t)
+	f.Always(whmcstest.Reply{
+		Status:      http.StatusForbidden,
+		ContentType: "application/json",
+		Body:        `{"result":"error","message":"Invalid IP 203.0.113.7"}`,
+	})
+	c := newClient(t, f, nil)
+
+	_, err := c.Call(context.Background(), action(t, "GetClients"), nil)
+	if code(err) != errs.CodeForbidden {
+		t.Fatalf("code = %s, want %s", code(err), errs.CodeForbidden)
+	}
+	if !strings.Contains(err.Error(), "Invalid IP 203.0.113.7") {
+		t.Errorf("the WHMCS reason was discarded, leaving only a status code: %v", err)
+	}
+	if remedy, _ := errs.Coded(err).Details["remedy"].(string); remedy == "" {
+		t.Error("no remedy offered for a rejection the operator has to go and fix")
+	}
+}
+
+func TestBareForbiddenStillExplainsItself(t *testing.T) {
+	// A WAF or proxy returns 403 with no WHMCS body. The message must still
+	// point somewhere useful rather than being empty.
+	f := whmcstest.New(t)
+	f.Always(whmcstest.Reply{Status: http.StatusForbidden, ContentType: "text/html", Body: "<html>blocked</html>"})
+	c := newClient(t, f, nil)
+
+	_, err := c.Call(context.Background(), action(t, "GetClients"), nil)
+	if code(err) != errs.CodeForbidden {
+		t.Fatalf("code = %s, want %s", code(err), errs.CodeForbidden)
+	}
+	if !strings.Contains(err.Error(), "IP allowlist") {
+		t.Errorf("error does not suggest what to check: %v", err)
+	}
+}
+
 func TestCredentialsNeverAppearInErrors(t *testing.T) {
 	// WHMCS echoing a credential back in an error message, or a transport error
 	// carrying the request, must not put the secret in front of the model.

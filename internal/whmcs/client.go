@@ -205,15 +205,21 @@ func (c *Client) do(ctx context.Context, body string) (*Response, error) {
 		_ = resp.Body.Close()
 	}()
 
-	if err := statusError(resp.StatusCode); err != nil {
-		return nil, err
-	}
-
 	// Read one byte past the cap so that hitting it exactly is distinguishable
 	// from exceeding it.
+	//
+	// The body is read before the status is judged, because WHMCS puts the
+	// actual reason in it even on a 4xx. An IP that is not on the API allowlist
+	// comes back as 403 with {"result":"error","message":"Invalid IP 1.2.3.4"},
+	// and reporting only "HTTP 403" would throw away the one piece of
+	// information that tells an operator what to go and fix.
 	raw, err := io.ReadAll(io.LimitReader(resp.Body, c.maxBytes+1))
 	if err != nil {
 		return nil, c.transportError(ctx, err)
+	}
+
+	if err := c.statusError(resp.StatusCode, raw); err != nil {
+		return nil, err
 	}
 	if int64(len(raw)) > c.maxBytes {
 		return nil, errs.New(errs.CodeResponseTooLarge,
@@ -281,13 +287,25 @@ func (c *Client) transportError(ctx context.Context, err error) error {
 }
 
 // statusError maps an HTTP status to a coded error, deciding retryability.
-func statusError(code int) error {
+//
+// body is the response body, already read. WHMCS explains itself in there even
+// on a 4xx, so the explanation is surfaced when there is one rather than
+// reporting a bare status code.
+func (c *Client) statusError(code int, body []byte) error {
 	switch {
 	case code >= 200 && code < 300:
 		return nil
 	case code == http.StatusUnauthorized || code == http.StatusForbidden:
-		// Not retryable and not the model's fault: the credential is wrong or
-		// the caller's IP is not allowlisted in WHMCS.
+		// Not retryable and not the model's fault: the credential is wrong, the
+		// role has no permissions, or the caller's IP is not on the API
+		// allowlist. WHMCS distinguishes those in the body; pass it on.
+		if reason := c.whmcsMessage(body); reason != "" {
+			return errs.New(errs.CodeForbidden,
+				"WHMCS rejected the request (HTTP %d): %s", code, reason).
+				WithDetails(map[string]any{
+					"remedy": "check the API credential, its role permissions, and the API IP allowlist in System Settings",
+				})
+		}
 		return errs.New(errs.CodeForbidden,
 			"WHMCS rejected the API credential (HTTP %d); check the identifier, secret, and API IP allowlist", code)
 	case code == http.StatusTooManyRequests:
@@ -295,8 +313,28 @@ func statusError(code int) error {
 	case code >= 500:
 		return errs.New(errs.CodeUpstreamUnavailable, "WHMCS returned HTTP %d", code)
 	default:
+		if reason := c.whmcsMessage(body); reason != "" {
+			return errs.New(errs.CodeInvalidResponse, "WHMCS returned HTTP %d: %s", code, reason)
+		}
 		return errs.New(errs.CodeInvalidResponse, "WHMCS returned HTTP %d", code)
 	}
+}
+
+// whmcsMessage extracts a WHMCS error message from a response body, or returns
+// empty if the body is not a WHMCS error. Credentials are scrubbed, because a
+// rejection message is one of the few places WHMCS might echo one back.
+func (c *Client) whmcsMessage(body []byte) string {
+	var payload struct {
+		Result  string `json:"result"`
+		Message string `json:"message"`
+	}
+	if err := json.Unmarshal(body, &payload); err != nil {
+		return ""
+	}
+	if payload.Message == "" {
+		return ""
+	}
+	return c.scrub(payload.Message)
 }
 
 // backoff returns the delay before the given attempt, with jitter so that
