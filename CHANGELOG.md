@@ -19,6 +19,19 @@ changelog rather than being hidden under `chore:`.
 
 ---
 
+## [0.1.1](https://github.com/theorigamicorporation/toc-whmcs-mcp/compare/v0.1.0...v0.1.1) (2026-08-03)
+
+
+### Bug Fixes
+
+* **untrusted:** enforce the content size cap after boundary replacement ([da0b57a](https://github.com/theorigamicorporation/toc-whmcs-mcp/commit/da0b57a1aaac112dbd062637568137fc5eba51c3))
+
+
+### Dependencies
+
+* audit dependency licences and ship the required notices ([481713a](https://github.com/theorigamicorporation/toc-whmcs-mcp/commit/481713a664e0163f1ae72f2f607211d61fb344f9))
+* bump distroless/static-debian12 from `f5b485e` to `a9fcaed` ([#1](https://github.com/theorigamicorporation/toc-whmcs-mcp/issues/1)) ([0762167](https://github.com/theorigamicorporation/toc-whmcs-mcp/commit/07621671a8917799c6eafca22f9f081427211a5f))
+
 ## 0.1.0
 
 Initial implementation, before release automation was in place. See the specification in `openspec/specs/`.
