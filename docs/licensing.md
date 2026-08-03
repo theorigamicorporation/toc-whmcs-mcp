@@ -109,23 +109,51 @@ with the product you license is the documented purpose of that documentation, an
 this repository is private and internal. Nothing here is redistributed to third
 parties or offered as a competing product. The risk is low.
 
-It is not zero, and it is a legal call rather than an engineering one. Two
-mitigations are in place already:
+WHMCS publish their documentation under "Copyright (c) WHMCS 2026. All rights
+reserved." There is no Creative Commons or other open grant, so **attribution
+does not confer a right to redistribute**. Crediting a source and being licensed
+to copy it are different things; a link is courtesy, not permission.
+
+Attribution is still worth having, and is in place, because the realistic risk
+here is relational rather than litigious: publishing an integration for a
+vendor's product that also redistributes that vendor's documentation is the kind
+of thing a vendor notices. Being visibly straight about whose text it is, and
+pointing at their page as authoritative, is the cheapest way to defuse that.
+
+Three mitigations are in place:
+
+- The generated registry carries an attribution header naming WHMCS as the
+  copyright holder, disclaiming affiliation, and pointing at the vendor page as
+  authoritative.
+- `whmcs_describe_action` returns a `source` field carrying the same
+  attribution alongside the per-action `documentation` URL, so a caller sees
+  where the text came from rather than treating this server's copy as canonical.
 
 - Test fixtures under `cmd/docgen/testdata/` are trimmed to the fragment the
   parser reads: the title, summary and parameter tables. Site navigation,
-  styling and marketing content are removed. That cut them from 92 KB to 24 KB
-  and reduced the copied material to what the offline test genuinely needs.
-- [LICENSE](../LICENSE) section 5 states that generated schemas derive from
-  vendor documentation and remain subject to that vendor's terms, and disclaims
-  affiliation.
+  styling and marketing content are removed. That cut them from 92 KB to 24 KB.
 
-If a stricter position is ever wanted, the available step is to drop the
-`Description` field from the generated registry and keep only names, types and
-requiredness. That removes the prose entirely at the cost of making
-`whmcs_describe_action` much less useful to an agent, which is a real product
-trade-off. It has not been done because the current position looks defensible;
-raise it with legal if you disagree.
+[LICENSE](../LICENSE) section 5 states the same in the licence itself.
+
+### What is still open
+
+Attribution does not resolve the underlying question, and it should not be
+mistaken for having done so.
+
+Of the 1,339 parameter descriptions, the overwhelming majority are too short to
+carry authorship at all: `"User ID"`, `"Format: MMYY"`, `"The note to add"`.
+Where only a handful of phrasings exist for a fact, expression merges with the
+fact and there is nothing to own. Those are not a concern.
+
+**65 descriptions run over 100 characters**, and those are genuinely written
+prose, mostly explaining an encoding rule. If this repository is ever made
+public, those 65 are the ones to rewrite in our own words. It is an hour of
+work, not a project, and the result is arguably better: an agent needs "base64
+of a PHP-serialized array" stated flatly, not walked through with placeholder
+variables.
+
+Until then the position is: private repository, internal use, interoperating
+with a licensed product, vendor credited, vendor page cited as authoritative.
 
 WHMCS is a trademark of its respective owner. This project is not affiliated
 with, endorsed by, or sponsored by WHMCS.

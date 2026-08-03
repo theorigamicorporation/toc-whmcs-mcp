@@ -52,6 +52,14 @@ type Action struct {
 	Response []Param
 }
 
+// SourceAttribution credits the origin of the schema data. It travels with
+// whmcs_describe_action output so a caller can see where the parameter
+// descriptions came from and follow the link to the authoritative version,
+// rather than treating this server's copy as canonical.
+const SourceAttribution = "Schema derived from the WHMCS API documentation, " +
+	"Copyright (c) WHMCS, all rights reserved. Not affiliated with or endorsed by WHMCS. " +
+	"The linked vendor page is authoritative."
+
 // DocURL returns the vendor documentation page for the action.
 func (a Action) DocURL() string {
 	return "https://developers.whmcs.com/api-reference/" + a.Slug + "/"

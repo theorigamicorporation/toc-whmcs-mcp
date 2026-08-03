@@ -327,6 +327,7 @@ func Describe(a Action) map[string]any {
 		"mutating":           Classify(a.Name).Mutating(),
 		"needs_confirmation": Classify(a.Name).NeedsConfirmation(),
 		"documentation":      a.DocURL(),
+		"source":             SourceAttribution,
 		"parameters":         params,
 	}
 }

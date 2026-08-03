@@ -3,6 +3,20 @@
 // Source: https://developers.whmcs.com/api/api-index/
 // Regenerate with: just gen
 //
+// ATTRIBUTION
+//
+// The action names, parameter names, types and requiredness below describe
+// the WHMCS Admin API and are derived from the vendor's published API
+// documentation at https://developers.whmcs.com/. Parameter descriptions are
+// reproduced from that documentation.
+//
+// WHMCS API documentation is Copyright (c) WHMCS. All rights reserved.
+// WHMCS is a trademark of its respective owner. This project is not
+// affiliated with, endorsed by, or sponsored by WHMCS. The documentation is
+// referenced here to interoperate with the product, and each action below
+// carries a Slug that resolves to its page on the vendor's own site, which
+// is the authoritative reference.
+//
 // Safety classification is NOT generated. It lives in classification.go
 // and is maintained by hand, because the vendor documentation does not say
 // whether an action reads or destroys.
