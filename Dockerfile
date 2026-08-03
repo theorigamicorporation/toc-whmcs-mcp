@@ -25,7 +25,7 @@ RUN go build -trimpath \
 # distroless static: no shell, no package manager, no interpreter. There is
 # nothing in this image to run except the server, which matters for something
 # holding a credential to a billing system.
-FROM gcr.io/distroless/static-debian12@sha256:f5b485ea962d9bd1186b2f6b3a061191539b905b82ec395de78cbfae51f20e35
+FROM gcr.io/distroless/static-debian12@sha256:a9fcaedd4c9b59e12dd65d954f0b5044f19b0647a8a3712e77205df9e7b102cd
 
 ARG VERSION=dev
 ARG COMMIT=unknown
