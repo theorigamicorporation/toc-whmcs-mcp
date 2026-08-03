@@ -19,6 +19,22 @@ changelog rather than being hidden under `chore:`.
 
 ---
 
+## [0.2.0](https://github.com/theorigamicorporation/toc-whmcs-mcp/compare/v0.1.1...v0.2.0) (2026-08-03)
+
+
+### ⚠ BREAKING CHANGES
+
+* the licence changes from proprietary and confidential to the GNU Affero General Public License v3.0. Anyone running a modified version and exposing it to users over a network must offer them its source.
+
+### Features
+
+* relicense to AGPL-3.0 and stop carrying vendor prose ([a535079](https://github.com/theorigamicorporation/toc-whmcs-mcp/commit/a535079cc98d369c836dbb99be8a8004fb188402))
+
+
+### Bug Fixes
+
+* **tools:** reject partially numeric integer arguments ([f8432c7](https://github.com/theorigamicorporation/toc-whmcs-mcp/commit/f8432c707e8faebc4fd445c56ffc2b481984be29))
+
 ## [0.1.1](https://github.com/theorigamicorporation/toc-whmcs-mcp/compare/v0.1.0...v0.1.1) (2026-08-03)
 
 
