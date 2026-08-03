@@ -19,9 +19,9 @@ changelog rather than being hidden under `chore:`.
 
 ---
 
-## 0.1.0 (unreleased)
+## 0.1.0
 
-Initial implementation. See the specification in `openspec/specs/`.
+Initial implementation, before release automation was in place. See the specification in `openspec/specs/`.
 
 ### Features
 
