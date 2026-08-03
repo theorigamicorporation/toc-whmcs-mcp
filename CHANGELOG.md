@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/theorigamicorporation/toc-whmcs-mcp/compare/v0.1.0...v0.1.1) (2026-08-03)
+
+
+### Features
+
+* document installing without a checkout, and report the version when go-installed ([#13](https://github.com/theorigamicorporation/toc-whmcs-mcp/issues/13)) ([3c570c7](https://github.com/theorigamicorporation/toc-whmcs-mcp/commit/3c570c7f61c2f07fcb64dd3ac5c4f22bf445dd5f))
+
 ## 0.1.0 (2026-08-03)
 
 
