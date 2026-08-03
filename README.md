@@ -91,14 +91,35 @@ claude mcp add whmcs \
   -- "$BIN"
 ```
 
-Prefer not to put the secret in your MCP client's config, where it sits in
-plain text? Put it in a `0600` file and pass a path instead:
+### Keeping the secret out of the client config
+
+Step 5 above writes your WHMCS credentials into the MCP client's config in plain
+text, because that is where clients keep an `env` block. Claude Code puts it in
+`~/.claude.json`. That means the secret is at rest in two places, and rotating
+it means remembering both.
+
+Instead, put it in one `0600` file and give the client a path. Run this in place
+of step 5, in the same shell where the variables above are exported:
 
 ```sh
+install -d -m 0700 ~/.config/toc-whmcs-mcp
+( umask 077; cat > ~/.config/toc-whmcs-mcp/env <<EOF
+WHMCS_MCP_WHMCS_URL=$WHMCS_MCP_WHMCS_URL
+WHMCS_MCP_API_IDENTIFIER=$WHMCS_MCP_API_IDENTIFIER
+WHMCS_MCP_API_SECRET=$WHMCS_MCP_API_SECRET
+WHMCS_MCP_PROFILE=readonly
+EOF
+)
+
 claude mcp add whmcs -- toc-whmcs-mcp -env-file "$HOME/.config/toc-whmcs-mcp/env"
 ```
 
-See [docs/configuration.md](docs/configuration.md#keeping-the-credential-out-of-client-config).
+The server refuses to read the file if it is readable by other users, so the
+`umask` is doing real work rather than being decoration. Rotating the credential
+is now a single edit, and the client config holds nothing worth stealing.
+
+More, including `WHMCS_MCP_ENV_FILE` and the precedence rules:
+[docs/configuration.md](docs/configuration.md#keeping-the-credential-out-of-client-config).
 
 If `-healthcheck` reports `Invalid IP`, the credential is fine and the machine's
 IP is not on the WHMCS API allowlist: **System Settings > General Settings >
