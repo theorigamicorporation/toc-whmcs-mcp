@@ -102,6 +102,16 @@ func (s Spec) Validate() error {
 		if f.Kind == Untrusted && f.Origin == "" {
 			return fmt.Errorf("output spec %q declares untrusted field %q with no origin", s.Title, f.Name)
 		}
+		// An untrusted field is wrapped as text. Declaring a structured type
+		// means the value goes through fmt %v, which emits Go's map[...] debug
+		// syntax into the model's context: unreadable, and it buries whatever
+		// the customer actually wrote. Project the structure and wrap its
+		// string leaves instead.
+		if f.Kind == Untrusted && f.Type != "" && f.Type != "string" {
+			return fmt.Errorf(
+				"output spec %q declares untrusted field %q as %s; only string fields can be wrapped, "+
+					"project the structure and wrap its text leaves", s.Title, f.Name, f.Type)
+		}
 	}
 	return nil
 }

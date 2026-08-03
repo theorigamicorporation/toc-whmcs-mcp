@@ -302,7 +302,7 @@ func wrapUntrusted(v any, depth int) any {
 	case map[string]any:
 		out := make(map[string]any, len(t))
 		for k, val := range t {
-			if s, ok := val.(string); ok && s != "" && looksUntrusted(k) {
+			if s, ok := val.(string); ok && s != "" && looksUntrusted(k, s) {
 				out[k] = untrusted.Wrap("whmcs:"+k, s)
 				continue
 			}
@@ -320,14 +320,79 @@ func wrapUntrusted(v any, depth int) any {
 	}
 }
 
-func looksUntrusted(key string) bool {
+// notProseKeys are keys that match untrustedGenericKeys by substring but never
+// carry customer prose. "lastreply" is a timestamp and "replyid" is a number,
+// and both matched "reply", so both were returned wrapped in an
+// untrusted-content envelope. That is noise, and noise around a safety signal
+// makes the signal easier to ignore.
+var notProseKeys = []string{
+	"lastreply", "replyid", "noteid", "messageid", "subjectid",
+	"replycount", "notescount", "lastreplytime", "datereplied",
+}
+
+func looksUntrusted(key, value string) bool {
 	k := strings.ToLower(key)
+	for _, exact := range notProseKeys {
+		if k == exact {
+			return false
+		}
+	}
+	// An identifier is not prose whatever it is called.
+	if strings.HasSuffix(k, "id") || strings.HasSuffix(k, "_id") {
+		return false
+	}
+	// Neither is a bare number or a timestamp.
+	if isNumeric(value) || looksLikeTimestamp(value) {
+		return false
+	}
 	for _, s := range untrustedGenericKeys {
 		if strings.Contains(k, s) {
 			return true
 		}
 	}
 	return false
+}
+
+func isNumeric(s string) bool {
+	if strings.TrimSpace(s) == "" {
+		return false
+	}
+	for _, r := range s {
+		if r < '0' || r > '9' {
+			return false
+		}
+	}
+	return true
+}
+
+// looksLikeTimestamp matches the shapes WHMCS returns: "2026-07-22 15:30:01",
+// "2026-07-22" and "0000-00-00 00:00:00".
+func looksLikeTimestamp(s string) bool {
+	s = strings.TrimSpace(s)
+	if len(s) != 10 && len(s) != 19 {
+		return false
+	}
+	for i, r := range s {
+		switch i {
+		case 4, 7:
+			if r != '-' {
+				return false
+			}
+		case 10:
+			if r != ' ' {
+				return false
+			}
+		case 13, 16:
+			if r != ':' {
+				return false
+			}
+		default:
+			if r < '0' || r > '9' {
+				return false
+			}
+		}
+	}
+	return true
 }
 
 // statusTool reports the server's effective security posture. An operator (or
