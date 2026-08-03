@@ -7,6 +7,16 @@
 
 * document installing without a checkout, and report the version when go-installed ([#13](https://github.com/theorigamicorporation/toc-whmcs-mcp/issues/13)) ([3c570c7](https://github.com/theorigamicorporation/toc-whmcs-mcp/commit/3c570c7f61c2f07fcb64dd3ac5c4f22bf445dd5f))
 
+
+### Bug Fixes
+
+* report why WHMCS rejected a call instead of only its status code. A request from an IP that is not on the WHMCS API allowlist returns HTTP 403 with `{"result":"error","message":"Invalid IP ..."}`, and the client discarded that body, reporting "WHMCS rejected the API credential" and sending operators to check a credential that was never the problem ([#15](https://github.com/theorigamicorporation/toc-whmcs-mcp/issues/15)) ([ec39c8a](https://github.com/theorigamicorporation/toc-whmcs-mcp/commit/ec39c8a))
+
+<!-- Added by hand: the commit above was typed `docs:` because the pull request
+     was mostly a documentation split, so release-please could not see the fix
+     inside it. CONTRIBUTING.md says to pick the type by what an operator sees,
+     not by which files moved. This entry is the correction. -->
+
 ## 0.1.0 (2026-08-03)
 
 
