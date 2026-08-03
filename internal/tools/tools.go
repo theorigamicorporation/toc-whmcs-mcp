@@ -13,6 +13,7 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -119,6 +120,12 @@ func (a Args) String(name string) string {
 }
 
 // Int returns an integer argument and whether it was present and integral.
+//
+// A string must be an integer in its entirety. Partial parsing is refused
+// because it silently changes the target: "88x" parsing as 88 would show a
+// human "service_id: 88x" in a confirmation preview while terminating service
+// 88. The same principle the registry applies to a misspelled parameter, that
+// it is an error rather than something to be salvaged, applies here.
 func (a Args) Int(name string) (int, bool) {
 	switch v := a[name].(type) {
 	case float64:
@@ -128,9 +135,11 @@ func (a Args) Int(name string) (int, bool) {
 		return int(v), true
 	case int:
 		return v, true
+	case int64:
+		return int(v), true
 	case string:
-		var n int
-		if _, err := fmt.Sscanf(strings.TrimSpace(v), "%d", &n); err != nil {
+		n, err := strconv.Atoi(strings.TrimSpace(v))
+		if err != nil {
 			return 0, false
 		}
 		return n, true

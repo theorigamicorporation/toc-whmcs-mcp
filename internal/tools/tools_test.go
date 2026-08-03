@@ -54,6 +54,23 @@ func TestArgsAccessors(t *testing.T) {
 	}
 }
 
+func TestArgsIntRejectsPartiallyNumericStrings(t *testing.T) {
+	// Partial parsing silently changes the target. "88x" reading as 88 would
+	// show a human "service_id: 88x" in a confirmation preview while
+	// terminating service 88.
+	for _, bad := range []any{"42abc", "42.9", "1e3", "0x10", " 42 x", "", "abc", "4 2"} {
+		if n, ok := (Args{"v": bad}).Int("v"); ok {
+			t.Errorf("Int(%q) = %d, accepted; want rejection", bad, n)
+		}
+	}
+	// Whitespace around an otherwise whole number is fine.
+	for _, good := range []any{"42", " 42 ", 42, float64(42), int64(42)} {
+		if n, ok := (Args{"v": good}).Int("v"); !ok || n != 42 {
+			t.Errorf("Int(%v) = %d, %v; want 42, true", good, n, ok)
+		}
+	}
+}
+
 func TestArgsKeysAreSortedAndValueFree(t *testing.T) {
 	// Keys feeds the audit record. It must be deterministic, and it must expose
 	// names only: values may be customer content or the text of a write.
