@@ -1,6 +1,6 @@
 # Security model
 
-The short version is in the [README](../README.md#security-model). This is the
+The short version is in the [README](../README.md#the-short-version-of-the-security-model). This is the
 detail: what is enforced, where in the code, and what someone would actually
 have to defeat.
 
