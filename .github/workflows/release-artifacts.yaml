@@ -16,7 +16,10 @@ on:
         required: true
         type: string
 
-permissions: read-all
+# No workflow-level permissions block here on purpose. This workflow is only
+# ever called, and a called workflow's effective permissions come from the
+# caller's job. Declaring a lower ceiling here would cap the jobs below, which
+# need write scopes to publish and sign a release.
 
 jobs:
   binaries:
