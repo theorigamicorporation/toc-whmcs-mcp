@@ -32,6 +32,12 @@ const LongDescriptionThreshold = 100
 // is safe: the parameter still carries its name, type and requiredness, and
 // whmcs_describe_action still links to the vendor's own page, which is
 // authoritative.
+//
+// #nosec G101 -- every value here is documentation prose. gosec's
+// hardcoded-credential heuristic matches on words like "card_number",
+// "password" and "token", which is exactly what descriptions of those
+// parameters have to contain. There is no secret in this file, and the
+// server never returns a credential in the first place.
 var descriptions = map[string]string{
 	// ---- Client ----------------------------------------------------------
 	"addclient.owner_user_id":  "Existing user to own the client. Omit to create a new user.",
