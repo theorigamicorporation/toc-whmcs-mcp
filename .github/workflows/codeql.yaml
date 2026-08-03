@@ -1,17 +1,14 @@
 name: CodeQL
 
-# Manual only. CodeQL uploads its results to code scanning, which needs GitHub
-# Advanced Security; this repository is private and does not have it, so an
-# automatic run would fail on the upload every time.
-#
-# To enable properly once Advanced Security is on, restore:
-#   push:
-#     branches: [main]
-#   pull_request:
-#     branches: [main]
-#   schedule:
-#     - cron: "0 6 * * 1"
 on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Weekly, so a newly published query finds an old bug without waiting for
+    # someone to touch the code.
+    - cron: "0 6 * * 1"
   workflow_dispatch:
 
 permissions: read-all
