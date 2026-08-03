@@ -55,6 +55,11 @@ operation that used to be permitted becomes forbidden. Do not hide those under
 Use `sec:` for a security fix that is not otherwise a user-visible feature or
 bug fix; it gets its own changelog section.
 
+While the version is below 1.0.0, `feat:` bumps the patch and `feat!:` bumps the
+minor, so a breaking change does not silently claim stability the project has
+not earned yet. The known limits are in
+[docs/security-model.md](docs/security-model.md#known-limits).
+
 No AI-sounding boilerplate anywhere externally visible, and no em dashes in
 commit messages, PR descriptions, or docs.
 
