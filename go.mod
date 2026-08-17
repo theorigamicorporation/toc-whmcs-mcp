@@ -3,7 +3,7 @@ module github.com/theorigamicorporation/toc-whmcs-mcp
 go 1.26.5
 
 require (
-	github.com/mark3labs/mcp-go v0.57.0
+	github.com/mark3labs/mcp-go v0.58.0
 	golang.org/x/net v0.57.0
 )
 
