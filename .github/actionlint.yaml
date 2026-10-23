@@ -1,0 +1,4 @@
+# Jobs run on the org's self-hosted ARC runner scale set.
+self-hosted-runner:
+  labels:
+    - o4-k8s-runner-set-o4
