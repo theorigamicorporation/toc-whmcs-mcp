@@ -24,7 +24,7 @@ obligation.
 | `github.com/santhosh-tekuri/jsonschema/v6` | v6.0.2 | Apache-2.0 |
 | `github.com/spf13/cast` | v1.7.1 | MIT |
 | `github.com/yosida95/uritemplate/v3` | v3.0.2 | BSD-3-Clause |
-| `golang.org/x/text` | v0.40.0 | BSD-3-Clause |
+| `golang.org/x/text` | v0.43.0 | BSD-3-Clause |
 
 The Go standard library is BSD-3-Clause, Copyright (c) 2009 The Go Authors.
 
@@ -364,7 +364,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ### golang.org/x/text
 
-_BSD-3-Clause, version v0.40.0_
+_BSD-3-Clause, version v0.43.0_
 
 ```
 Copyright 2009 The Go Authors.
