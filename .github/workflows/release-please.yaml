@@ -31,7 +31,7 @@ concurrency:
 jobs:
   release-please:
     name: Release Please
-    runs-on: ubuntu-latest
+    runs-on: o4-k8s-runner-set-o4
     permissions:
       contents: write
       pull-requests: write
