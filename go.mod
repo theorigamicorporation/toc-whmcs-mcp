@@ -4,7 +4,7 @@ go 1.26.10
 
 require (
 	github.com/mark3labs/mcp-go v0.57.0
-	golang.org/x/net v0.61.0
+	golang.org/x/net v0.62.0
 )
 
 require (
