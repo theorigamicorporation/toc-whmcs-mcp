@@ -12,8 +12,8 @@ on:
 permissions: read-all
 
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 # Every action is pinned to a commit SHA, not a tag. A tag is mutable: whoever
 # controls the action repository can repoint it at different code. This server
