@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.5](https://github.com/theorigamicorporation/toc-whmcs-mcp/compare/v0.1.4...v0.1.5) (2026-10-28)
+
+
+### Bug Fixes
+
+* **deps:** build with Go 1.26.10 and bump x/net, x/text for vulnerabilities ([#48](https://github.com/theorigamicorporation/toc-whmcs-mcp/issues/48)) ([34e96e5](https://github.com/theorigamicorporation/toc-whmcs-mcp/commit/34e96e5e65a1250c52288d4096050c8ed39e1df9))
+* **deps:** bump golang.org/x/net to v0.62.0 for GO-2026-6860 ([#54](https://github.com/theorigamicorporation/toc-whmcs-mcp/issues/54)) ([5188a57](https://github.com/theorigamicorporation/toc-whmcs-mcp/commit/5188a571297b41e77300ef13ac63d544509038e1))
+
 ## [0.1.4](https://github.com/theorigamicorporation/toc-whmcs-mcp/compare/v0.1.3...v0.1.4) (2026-08-03)
 
 
